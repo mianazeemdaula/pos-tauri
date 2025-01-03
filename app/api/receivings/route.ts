@@ -7,24 +7,53 @@ export async function GET(req: Request) {
     try {
         const url = new URL(req.url);
         const page = Number(url.searchParams.get('page')) || 1;
-        const pageSize = Number(url.searchParams.get('pageSize')) || 10;
+        const pageSize = Number(url.searchParams.get('pageSize')) || 15;
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.order.findMany({
+        const rows = await db.customerWalletTransaction.findMany({
             skip,
             take,
             orderBy: {
                 createdAt: 'desc',
             },
             include: {
-                user: true,
-                customer: true,
-                _count: {
-                    select: { OrderDetail: true }
+                wallet: {
+                    include: {
+                        customer: true,
+                    },
+                },
+            },
+            where: {
+                type: {
+                    equals: 'payment',
+                },
+                AND: {
+                    OR: [
+                        {
+                            wallet: {
+                                customer: {
+                                    name: {
+                                        contains: url.searchParams.get('s') || '',
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            description: {
+                                contains: url.searchParams.get('s') || '',
+                            },
+                        },
+                    ]
                 },
             },
         });
-        const totalPosts = await db.order.count({});
+        const totalPosts = await db.customerWalletTransaction.count({
+            where: {
+                type: {
+                    equals: 'payment',
+                }
+            }
+        });
         const totalPages = Math.ceil(totalPosts / take);
         return Response.json({
             rows,
@@ -39,45 +68,9 @@ export async function GET(req: Request) {
 export async function POST(req: NextRequest) {
     try {
         const data = await req.json();
-        const session = await auth();
-        const userId = session?.user?.id || '';
-        const customerId = data.customer_id;
-        const total = Number(data.total);
-
+        const customerId = data.customerId;
+        const total = Number(data.amount);
         await db.$transaction(async (prisma) => {
-            const sale = await prisma.order.create({
-                data: {
-                    total,
-                    userId,
-                    customerId,
-                },
-            });
-
-            const orderDetails = data.items.map((item: any) => ({
-                orderId: sale.id,
-                productId: item.id,
-                quantity: Number(item.qty),
-                discount: item.discount,
-                price: item.price,
-            }));
-
-            await prisma.orderDetail.createMany({
-                data: orderDetails,
-            });
-
-            const productUpdates = data.items.map(async (item: any) => {
-                const product = await prisma.product.findFirst({
-                    where: { id: item.id },
-                });
-                if (product) {
-                    await prisma.product.update({
-                        where: { id: product.id },
-                        data: { stock: product.stock - Number(item.qty) },
-                    });
-                }
-            });
-
-            await Promise.all(productUpdates);
 
             let wallet = await prisma.customerWallet.findFirst({
                 where: { customerId },
@@ -87,7 +80,7 @@ export async function POST(req: NextRequest) {
                 wallet = await prisma.customerWallet.create({
                     data: {
                         customerId,
-                        balance: -total,
+                        balance: total,
                     },
                 });
             } else {
@@ -100,8 +93,8 @@ export async function POST(req: NextRequest) {
             await prisma.customerWalletTransaction.create({
                 data: {
                     amount: total,
-                    type: 'sale',
-                    description: `Sale of #[${sale.id}]`,
+                    type: 'payment',
+                    description: data.description,
                     walletId: wallet.id,
                 },
             });

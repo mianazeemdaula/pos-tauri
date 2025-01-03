@@ -2,7 +2,7 @@
 
 import { db } from "@/prisma/db";
 
-export async function products(data?: FormData) {
+export async function products() {
     const rows = await db.product.findMany({});
     return rows;
 }
@@ -35,6 +35,10 @@ export async function customers() {
 }
 
 export async function sellers() {
-    const rows = await db.seller.findMany({});
+    const rows = await db.seller.findMany({
+        include: {
+            wallet: true,
+        }
+    });
     return rows;
 }

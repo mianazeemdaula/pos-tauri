@@ -1,5 +1,5 @@
 import { Category } from "@prisma/client";
-import { set, z } from "zod";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -32,6 +32,9 @@ export default function ItemModal({ isOpen, onClose, initialData }: ItemModalPro
         if (initialData) {
             setValue('name', initialData.name);
         } else {
+            reset();
+        }
+        return () => {
             reset();
         }
     }, [initialData]);

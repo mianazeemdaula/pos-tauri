@@ -38,7 +38,7 @@ export default function Home() {
         router.replace("/")
       }
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error((error as any).message);
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,16 @@
 "use client"
 import { useEffect, useState } from "react"
-import { customers, products } from "@/lib/database";
-import { Customer, Product } from "@prisma/client";
-import { Delete, Plus, Search } from "lucide-react";
+import { products, sellers } from "@/lib/database";
+import { Product, Seller } from "@prisma/client";
+import { CircleX, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import Label from "@/components/ui/label";
-import { get } from "http";
+import SearchProductModal from "@/components/dialogs/serach_products";
+import hotkeys from "hotkeys-js";
 
-interface SaleItem {
+interface PurchaseItem {
     id: string;
+    code: string;
     name: string;
     qty: number;
     price: number;
@@ -19,11 +21,12 @@ interface SaleItem {
 
 export default function SalePage() {
 
-    const [customersList, setCustomerList] = useState<Customer[]>([]);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-    const [customerBalance, setCustomerBalance] = useState(0);
+    const [customersList, setCustomerList] = useState<Seller[]>([]);
+    const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+    const [sellerBalance, setSellerBalance] = useState(0);
     const [productList, setProductList] = useState<Product[]>([]);
-    const [itemList, setItemList] = useState<SaleItem[]>([])
+    const [itemList, setItemList] = useState<PurchaseItem[]>([])
+    const [searchOpen, setSearchOpen] = useState<boolean>(false)
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -34,15 +37,29 @@ export default function SalePage() {
         setProductList(p);
     }
 
-    async function getCustomers() {
-        const p = await customers();
-        setCustomerList(p);
-        setSelectedCustomerId(p[0].id);
-        setCustomerBalance(p[0].wallet?.balance || 0);
+
+
+    useEffect(() => {
+        hotkeys("f2", function (e, handler) {
+            e.preventDefault();
+            setSearchOpen(!searchOpen);
+        });
+        return () => {
+            hotkeys.unbind("f2");
+        };
+    }, [searchOpen]);
+
+    async function getSellers() {
+        const p = await sellers();
+        if (p.length > 0) {
+            setCustomerList(p);
+            setSelectedSellerId(p[0].id);
+            setSellerBalance(p[0].wallet?.balance || 0);
+        }
     }
     useEffect(() => {
         getProducts();
-        getCustomers();
+        getSellers();
     }, [])
 
 
@@ -82,6 +99,7 @@ export default function SalePage() {
                     ...p,
                     {
                         id: product.id,
+                        code: product.code,
                         name: product.name,
                         qty: 1,
                         price: product.price,
@@ -97,16 +115,20 @@ export default function SalePage() {
         }
     }
 
-    async function handleSale() {
+    function removeFromCart(id: string) {
+        setItemList((prevItems) => prevItems.filter((item) => item.id !== id));
+    }
+
+    async function handlePurchase() {
         try {
-            const res = await fetch('/api/sale', {
+            const res = await fetch('/api/purchase', {
                 method: 'POST',
                 body: JSON.stringify({
                     items: itemList,
                     total: totalAmount,
                     discount: totalDiscount,
                     qty: totalQty,
-                    customer_id: selectedCustomerId,
+                    seller_id: selectedSellerId,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -115,11 +137,11 @@ export default function SalePage() {
             if (!res.ok) {
                 throw new Error(res.statusText);
             }
-            toast.success('Sale completed');
+            toast.success('Purchase completed');
             setItemList([]);
-            getCustomers();
+            getSellers();
         } catch (error) {
-            toast.error('Error while completing sale');
+            toast.error('Error: ' + (error as Error).message);
         }
     }
 
@@ -127,23 +149,23 @@ export default function SalePage() {
     return (
         <>
             <div className="flex justify-between items-center mb-4">
-                <h1>Sales</h1>
+                <h1>Purchase</h1>
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => { }}
-                ><Plus className="h-5 w-5" /> New Sale
+                ><Plus className="h-5 w-5" /> New Purchase
                 </button>
             </div>
 
 
             <div className="flex items-center justify-between space-x-4 my-2">
                 <div>
-                    <Label htmlFor="customer_id">Customer</Label>
+                    <Label htmlFor="customer_id">Company</Label>
                     <select className="px-3 py-2 w-48" name="customer_id" onChange={(e) => {
-                        setSelectedCustomerId(e.target.value);
+                        setSelectedSellerId(e.target.value);
                         const customer: any = customersList.find((c) => c.id == e.target.value);
                         if (customer) {
-                            setCustomerBalance(customer?.wallet?.balance || 0);
+                            setSellerBalance(customer?.wallet?.balance || 0);
                         }
                     }}>
                         {customersList.map((c) => (
@@ -153,7 +175,7 @@ export default function SalePage() {
                 </div>
                 <div className="w-48 text-right">
                     <Label htmlFor="customer_balance">Balance</Label>
-                    <div><span className="font-bold">RS.</span> {customerBalance}</div>
+                    <div><span className="font-bold">RS.</span> {sellerBalance}</div>
                 </div>
             </div>
 
@@ -161,7 +183,7 @@ export default function SalePage() {
                 <input type="text" name="" id="" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} />
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
-                    onClick={() => { }}
+                    onClick={() => setSearchOpen(true)}
                 ><Search className="h-5 w-5" /> Search
                 </button>
             </div>
@@ -169,6 +191,7 @@ export default function SalePage() {
                 <table className="table-fixed w-full border-collapse">
                     <thead className="bg-gray-100 text-sm">
                         <tr>
+                            <td className="w-1/4 text-left p-2">SKU</td>
                             <td className="w-1/4 text-left p-2">Product</td>
                             <td className="w-1/4 text-left">Price</td>
                             <td className="w-1/4 text-left">Qty</td>
@@ -178,16 +201,17 @@ export default function SalePage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                        {itemList.map((sale) => (
-                            <tr key={sale.id}>
-                                <td className="p-2">{sale.name}</td>
-                                <td className="p-2">{sale.price}</td>
-                                <td>{sale.qty}</td>
-                                <td>{sale.discount} ({sale.discountPercent}%)</td>
-                                <td>{sale.total}</td>
+                        {itemList.map((item) => (
+                            <tr key={item.id}>
+                                <td className="p-2">{item.code}</td>
+                                <td className="p-2">{item.name}</td>
+                                <td className="p-2">{item.price}</td>
+                                <td>{item.qty}</td>
+                                <td>{item.discount} ({item.discountPercent}%)</td>
+                                <td>{item.total}</td>
                                 <td className="text-center">
-                                    <button onClick={() => { }} >
-                                        <Delete className="h-5 w-5" />
+                                    <button onClick={() => removeFromCart(item.id)} >
+                                        <CircleX className="h-5 w-5" />
                                     </button>
                                 </td>
                             </tr>
@@ -212,10 +236,16 @@ export default function SalePage() {
                         <div className="text-xl">{itemList.length}</div>
                     </div>
                     <div>
-                        <button className="bg-secondary text-white px-4 py-2 rounded-md mt-4" onClick={handleSale}>Sale</button>
+                        <button className="bg-secondary text-white px-4 py-2 rounded-md mt-4 w-full" onClick={handlePurchase}>Purchase</button>
                     </div>
                 </div>
             </div>
+            <SearchProductModal isOpen={searchOpen} onClose={(e) => {
+                setSearchOpen(false);
+                if (e) {
+                    addToCard(e.id);
+                }
+            }} />
         </>
     )
 }

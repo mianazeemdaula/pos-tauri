@@ -2,7 +2,7 @@ import { db } from "@/prisma/db";
 
 export async function GET(
     req: Request,
-    { params }: { params: { customer: string } }
+    { params }: { params: Promise<{ customer: string }> }
 ) {
     try {
         const { customer } = await params;
@@ -25,7 +25,7 @@ export async function GET(
             skip,
             take,
             where: {
-                customerWalletId: wallet.id,
+                walletId: wallet.id,
                 AND: {
                     description: {
                         contains: search,
@@ -38,7 +38,7 @@ export async function GET(
         });
         const totalPosts = await db.customerWalletTransaction.count({
             where: {
-                customerWalletId: wallet.id,
+                walletId: wallet.id,
             },
         });
         const totalPages = Math.ceil(totalPosts / take);

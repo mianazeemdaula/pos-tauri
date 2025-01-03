@@ -1,24 +1,32 @@
 "use client"
 import { useEffect, useState } from "react"
-import { customers } from "@/lib/database";
 import { Customer } from "@prisma/client";
 import CustomerModal from "@/components/dialogs/customer";
 import { FilePenLine, Plus, Wallet } from "lucide-react";
 import Link from "next/link";
+import Pagination from "@/components/ui/pagination";
 
 export default function CategororyPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [search, setSearch] = useState("");
     const [customerList, setCustomerList] = useState<Customer[]>([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const handleNextPage = () => setPage((prev) => Math.min(prev + 1, totalPages));
+    const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));
 
 
-    async function getCustomers() {
-        const p = await customers();
-        setCustomerList(p);
-    }
     useEffect(() => {
+        async function getCustomers() {
+            const p = await fetch('/api/customer?page=' + page + '&s=' + search);
+            const data = await p.json();
+            setCustomerList(data.customers);
+            setTotalPages(data.meta.totalPages);
+        }
         getCustomers();
-    }, []);
+    }, [search, page]);
 
     const handleOpenModal = (item: Customer | null = null) => {
         setSelectedCustomer(item);
@@ -26,7 +34,6 @@ export default function CategororyPage() {
     };
 
     const handleCloseModal = () => {
-        getCustomers();
         setModalOpen(false);
         setSelectedCustomer(null);
     };
@@ -34,7 +41,10 @@ export default function CategororyPage() {
     return (
         <>
             <div className="flex justify-between items-center">
-                <h1>Customers</h1>
+                <div>
+                    <h1 className="uppercase font-semibold">Customers</h1>
+                    <input type="text" onChange={(e) => setSearch(e.target.value)} className="bg-gray-100 px-4 py-1" placeholder="Search customer" />
+                </div>
                 <button
                     className="bg-gray-100 flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => handleOpenModal()}
@@ -48,7 +58,7 @@ export default function CategororyPage() {
                         <th className="w-1/4 text-left">Name</th>
                         <th className="w-1/4 text-left">City</th>
                         <th className="w-1/4 text-left">Address</th>
-                        <th className="w-1/4 text-left">Wallet</th>
+                        <th className="w-1/4 text-left">Balance</th>
                         <th className="w-1/4 text-center">Action</th>
                     </tr>
                 </thead>
@@ -59,7 +69,7 @@ export default function CategororyPage() {
                             <td>{customer.name}</td>
                             <td>{customer.city}</td>
                             <td>{customer.address}</td>
-                            <td>RS. {customer.wallet ? customer.wallet.balance : 0}</td>
+                            <td>RS. {customer.wallet?.balance ?? 0}</td>
                             <td className="text-center flex space-x-2 items-center justify-center">
                                 <button onClick={() => handleOpenModal(customer)} >
                                     <FilePenLine className="h-5 w-5" />
@@ -72,6 +82,7 @@ export default function CategororyPage() {
                     ))}
                 </tbody>
             </table >
+            <Pagination page={page} onPage={(p) => setPage(p)} totalPages={totalPages} onNextPage={handleNextPage} onPreviousPage={handlePreviousPage} />
             <CustomerModal
                 isOpen={modalOpen}
                 onClose={handleCloseModal}

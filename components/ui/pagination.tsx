@@ -10,6 +10,7 @@ interface PaginationProps {
 }
 
 const Pagination: FC<PaginationProps> = ({ page, totalPages, onNextPage, onPreviousPage, onPage }) => {
+
     return (
         <div className='flex items-center justify-between mt-4 border border-gray-200 rounded-md px-4 py-1 bg-gray-100'>
             <div className='flex items-center justify-center' >

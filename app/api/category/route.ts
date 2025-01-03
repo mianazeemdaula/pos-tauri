@@ -6,7 +6,7 @@ export async function GET() {
         const cats = await db.category.findMany({});
         return Response.json(cats);
     } catch (error) {
-        throw "Somthing went wrong";
+        throw error;
     }
 }
 

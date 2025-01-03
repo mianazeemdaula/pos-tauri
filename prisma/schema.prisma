@@ -147,14 +147,15 @@ model OrderDetail {
 }
 
 model Seller {
-  id        String     @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
   phone     String
   city      String
   address   String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Purchase  Purchase[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  purchases Purchase[]
+  wallet    SellerWallet?
 }
 
 model Purchase {
@@ -183,22 +184,43 @@ model PurchaseDetail {
 }
 
 model CustomerWallet {
-  id                        String                      @id @default(cuid())
-  balance                   Float                       @default(0)
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  CustomerWalletTransaction CustomerWalletTransaction[]
-  customer                  Customer                    @relation(fields: [customerId], references: [id])
-  customerId                String                      @unique
+  id           String                      @id @default(cuid())
+  balance      Float                       @default(0)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  transactions CustomerWalletTransaction[]
+  customer     Customer                    @relation(fields: [customerId], references: [id])
+  customerId   String                      @unique
 }
 
 model CustomerWalletTransaction {
-  id               String         @id @default(cuid())
-  customerWallet   CustomerWallet @relation(fields: [customerWalletId], references: [id])
-  customerWalletId String
-  amount           Float
-  type             String
-  description      String?        @default("")
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id          String         @id @default(cuid())
+  wallet      CustomerWallet @relation(fields: [walletId], references: [id])
+  walletId    String
+  amount      Float
+  type        String
+  description String?        @default("")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model SellerWallet {
+  id           String                    @id @default(cuid())
+  balance      Float                     @default(0)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  transactions SellerWalletTransaction[]
+  seller       Seller                    @relation(fields: [sellerId], references: [id])
+  sellerId     String                    @unique
+}
+
+model SellerWalletTransaction {
+  id          String       @id @default(cuid())
+  wallet      SellerWallet @relation(fields: [walletId], references: [id])
+  walletId    String
+  amount      Float
+  type        String
+  description String?      @default("")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }

@@ -1,17 +1,16 @@
 "use client"
 import { useEffect, useState } from "react"
-import { products } from "@/lib/database";
-import { Product } from "@prisma/client";
-import ProductModal from "@/components/dialogs/product";
+import { CustomerWalletTransaction } from "@prisma/client";
 import { FilePenLine, Plus } from "lucide-react";
 import Pagination from "@/components/ui/pagination";
 import { formatDate } from "@/lib/funtions";
+import ReceivingModal from "@/components/dialogs/receiving";
 
-export default function Products() {
+export default function ReceivingsPage() {
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [productList, setProductList] = useState<Product[]>([]);
+    const [selectedPayment, setSelectedPayment] = useState<CustomerWalletTransaction | null>(null);
+    const [payments, setPayments] = useState<CustomerWalletTransaction[]>([]);
 
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -22,22 +21,22 @@ export default function Products() {
 
 
     useEffect(() => {
-        async function getProducts() {
-            const p = await fetch('/api/product?page=' + page + '&s=' + search);
+        async function getPayments() {
+            const p = await fetch('/api/receivings?page=' + page + '&s=' + search);
             const data = await p.json();
-            setProductList(data.rows);
+            setPayments(data.rows);
             setTotalPages(data.meta.totalPages);
         }
-        getProducts();
+        getPayments();
     }, [page, search]);
 
-    const handleOpenModal = (item: Product | null = null) => {
-        setSelectedProduct(item);
+    const handleOpenModal = (item: CustomerWalletTransaction | null = null) => {
+        setSelectedPayment(item);
         setModalOpen(true);
     };
 
     const handleCloseModal = () => {
-        window.location.reload();
+        setPage(1);
         setModalOpen(false);
     };
 
@@ -45,40 +44,34 @@ export default function Products() {
         <>
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="uppercase font-semibold">Products</h1>
-                    <input type="text" onChange={(e) => setSearch(e.target.value)} className="bg-gray-100 px-4 py-1" placeholder="Search product" />
+                    <h1 className="uppercase font-semibold">Receivings</h1>
+                    <input type="text" onChange={(e) => setSearch(e.target.value)} className="bg-gray-100 px-4 py-1" placeholder="Search receipt" />
                 </div>
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => handleOpenModal()}
-                ><Plus className="h-5 w-5" /> Add Product
+                ><Plus className="h-5 w-5" /> Add Receiving
                 </button>
             </div>
             <table className="table-fixed w-full mt-4 border-collapse">
                 <thead className="bg-gray-100 text-sm">
                     <tr>
-                        <td className="w-1/4 text-left p-2">SKU</td>
-                        <td className="w-1/4 text-left p-2">Name</td>
-                        <td className="w-1/4 text-left">Price</td>
-                        <td className="w-1/4 text-left">Discount</td>
-                        <td className="w-1/4 text-left">Sale Price</td>
-                        <td className="w-1/4 text-left">Stock</td>
-                        <td className="w-1/4 text-left">Created At</td>
+                        <td className="w-1/4 text-left p-2">Customer</td>
+                        <td className="w-1/4 text-left p-2">Description</td>
+                        <td className="w-1/4 text-left p-2">Amount</td>
+                        <td className="w-1/4 text-left">Date Time</td>
                         <td className="w-1/4 text-center">Action</td>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                    {productList.map((product) => (
-                        <tr key={product.id}>
-                            <td className="p-2">{product.code}</td>
-                            <td className="p-2">{product.name}</td>
-                            <td>{product.price}</td>
-                            <td>{product.discount}%</td>
-                            <td>{product.price - (product.price * product.discount / 100)}</td>
-                            <td>{product.stock}</td>
-                            <td>{formatDate(product.createdAt)}</td>
+                    {payments.map((payment: any) => (
+                        <tr key={payment.id}>
+                            <td className="p-2">{payment.wallet.customer.name}</td>
+                            <td className="p-2">{payment.description}</td>
+                            <td className="p-2">{payment.amount}</td>
+                            <td>{formatDate(payment.createdAt)}</td>
                             <td className="text-center">
-                                <button onClick={() => handleOpenModal(product)} >
+                                <button onClick={() => handleOpenModal(payment)} >
                                     <FilePenLine className="h-5 w-5" />
                                 </button>
                             </td>
@@ -87,10 +80,10 @@ export default function Products() {
                 </tbody>
             </table >
             <Pagination page={page} onPage={(p) => setPage(p)} totalPages={totalPages} onNextPage={handleNextPage} onPreviousPage={handlePreviousPage} />
-            <ProductModal
+            <ReceivingModal
                 isOpen={modalOpen}
                 onClose={handleCloseModal}
-                initialData={selectedProduct}
+                initialData={selectedPayment}
             />
 
         </>

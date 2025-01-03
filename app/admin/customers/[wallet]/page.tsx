@@ -1,13 +1,10 @@
 "use client";
 import Pagination from '@/components/ui/pagination';
-import { fetcher } from '@/lib/funtions';
+import { formatDate } from '@/lib/funtions';
 import { Plus } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useEffect, useState } from "react";
-import useSWR from 'swr';
 
-export default function Transaction() {
-    const params = useParams<{ wallet: string }>()
+export default function Transaction({ params }: { params: Promise<{ wallet: string }> }) {
 
     const [transactions, setTransactions] = useState([]);
     const [page, setPage] = useState(1);
@@ -15,7 +12,8 @@ export default function Transaction() {
     const [search, setSearch] = useState('');
 
     const fetchTransactions = async () => {
-        const res = await fetch(`/api/customer/transaction/${params.wallet}?page=${page}&pageSize=15&s=${search}`);
+        const { wallet } = await params;
+        const res = await fetch(`/api/customer/transaction/${wallet}?page=${page}&pageSize=15&s=${search}`);
         const data = await res.json();
         setTransactions(data.rows);
         setTotalPages(data.meta.totalPages);
@@ -27,7 +25,7 @@ export default function Transaction() {
 
     useEffect(() => {
         fetchTransactions();
-    }, [page, totalPages, search]);
+    }, [page, search]);
 
     return (
         <div>
@@ -66,7 +64,7 @@ export default function Transaction() {
                             <td className='p-2'>{t.type}</td>
                             <td>{t.description}</td>
                             <td className='p-2'>RS {t.amount}</td>
-                            <td>{t.createdAt}</td>
+                            <td>{formatDate(t.createdAt)}</td>
                         </tr>
                     ))}
                 </tbody>

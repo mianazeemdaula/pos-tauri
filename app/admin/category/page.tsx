@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
 import { categories } from "@/lib/database";
-import Link from "next/link";
 import { Category } from "@prisma/client";
 import ItemModal from "@/components/dialogs/category_dialog";
 import { FilePenLine, Plus } from "lucide-react";
@@ -33,7 +32,7 @@ export default function CategororyPage() {
     return (
         <>
             <div className="flex justify-between items-center">
-                <h1>Categories</h1>
+                <h1 className="uppercase font-semibold">Categories</h1>
                 <button
                     className="bg-gray-100 flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => handleOpenModal()}

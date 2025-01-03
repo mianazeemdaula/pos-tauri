@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "point-of-sale",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.txdevs.pos",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "point-of-sale",
+        "title": "TX Devs POS",
         "width": 800,
         "height": 600,
         "resizable": true,

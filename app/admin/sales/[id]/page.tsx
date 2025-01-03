@@ -1,7 +1,9 @@
 import { db } from "@/prisma/db";
 
 
-export default async function SaledViewPage({ params }: { params: { id: string } }) {
+export default async function SaledViewPage(
+    { params }: { params: Promise<{ id: string }> }
+) {
     const { id } = await params;
     const sale = await db.order.findFirst({
         where: {

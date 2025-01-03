@@ -3,13 +3,11 @@ import Image from "next/image";
 import { login } from "@/lib/actions/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { auth } from "@/lib/auth";
-
 
 const schema = z.object({
   username: z.string().min(3),
@@ -40,7 +38,7 @@ export default function Home() {
         router.replace("/admin")
       }
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error((error as any).message);
     } finally {
       setLoading(false);
     }

@@ -10,7 +10,7 @@ export async function GET(req: Request) {
         const pageSize = Number(url.searchParams.get('pageSize')) || 10;
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.order.findMany({
+        const rows = await db.purchase.findMany({
             skip,
             take,
             orderBy: {
@@ -18,9 +18,9 @@ export async function GET(req: Request) {
             },
             include: {
                 user: true,
-                customer: true,
+                seller: true,
                 _count: {
-                    select: { OrderDetail: true }
+                    select: { PurchaseDetail: true }
                 },
             },
         });
@@ -41,28 +41,27 @@ export async function POST(req: NextRequest) {
         const data = await req.json();
         const session = await auth();
         const userId = session?.user?.id || '';
-        const customerId = data.customer_id;
+        const sellerId = data.seller_id;
         const total = Number(data.total);
-
         await db.$transaction(async (prisma) => {
-            const sale = await prisma.order.create({
+            const purchase = await prisma.purchase.create({
                 data: {
                     total,
                     userId,
-                    customerId,
+                    sellerId,
                 },
             });
 
-            const orderDetails = data.items.map((item: any) => ({
-                orderId: sale.id,
+            const items = data.items.map((item: any) => ({
+                purchaseId: purchase.id,
                 productId: item.id,
                 quantity: Number(item.qty),
                 discount: item.discount,
                 price: item.price,
             }));
 
-            await prisma.orderDetail.createMany({
-                data: orderDetails,
+            await prisma.purchaseDetail.createMany({
+                data: items,
             });
 
             const productUpdates = data.items.map(async (item: any) => {
@@ -72,36 +71,36 @@ export async function POST(req: NextRequest) {
                 if (product) {
                     await prisma.product.update({
                         where: { id: product.id },
-                        data: { stock: product.stock - Number(item.qty) },
+                        data: { stock: product.stock + Number(item.qty) },
                     });
                 }
             });
 
             await Promise.all(productUpdates);
 
-            let wallet = await prisma.customerWallet.findFirst({
-                where: { customerId },
+            let wallet = await prisma.sellerWallet.findFirst({
+                where: { sellerId },
             });
 
             if (!wallet) {
-                wallet = await prisma.customerWallet.create({
+                wallet = await prisma.sellerWallet.create({
                     data: {
-                        customerId,
-                        balance: -total,
+                        sellerId,
+                        balance: total,
                     },
                 });
             } else {
-                wallet = await prisma.customerWallet.update({
+                wallet = await prisma.sellerWallet.update({
                     where: { id: wallet.id },
-                    data: { balance: wallet.balance - total },
+                    data: { balance: wallet.balance + total },
                 });
             }
 
-            await prisma.customerWalletTransaction.create({
+            await prisma.sellerWalletTransaction.create({
                 data: {
                     amount: total,
-                    type: 'sale',
-                    description: `Sale of #[${sale.id}]`,
+                    type: 'purchase',
+                    description: `Purchase of #[${purchase.id}]`,
                     walletId: wallet.id,
                 },
             });

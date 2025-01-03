@@ -12,15 +12,18 @@ export default function SalesPage() {
     const [totalPages, setTotalPages] = useState(1);
 
 
-    async function getSales() {
-        const p = await fetch(`/api/sale?page=${page}&pageSize=15`);
-        const data = await p.json();
-        setSalesList(data.rows);
-        setTotalPages(data.meta.totalPages);
-    }
 
     useEffect(() => {
+        async function getSales() {
+            const p = await fetch(`/api/sale?page=${page}&pageSize=15`);
+            const data = await p.json();
+            setSalesList(data.rows);
+            setTotalPages(data.meta.totalPages);
+        }
         getSales();
+        return () => {
+            setSalesList([]);
+        }
     }, [page]);
 
     const handleNextPage = () => setPage((prev) => Math.min(prev + 1, totalPages));
@@ -30,7 +33,7 @@ export default function SalesPage() {
         <>
             <div className="flex justify-between items-center">
                 <h1>Sales</h1>
-                <Link href={"/admin/sale"}
+                <Link href={"/admin/sales/new"}
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
                 ><Plus className="h-5 w-5" /> New Sale
                 </Link>
