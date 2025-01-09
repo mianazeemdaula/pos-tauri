@@ -1,13 +1,14 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Order } from "@prisma/client";
+import { Sale } from "@prisma/client";
 import { Eye, FilePenLine, Plus } from "lucide-react";
 import Link from "next/link";
 import Pagination from "@/components/ui/pagination";
+import { formatDate } from "@/lib/funtions";
 
 export default function SalesPage() {
 
-    const [salesList, setSalesList] = useState<Order[]>([]);
+    const [salesList, setSalesList] = useState<Sale[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -41,7 +42,7 @@ export default function SalesPage() {
             <table className="table-fixed w-full mt-4 border-collapse">
                 <thead className="bg-gray-100 text-sm">
                     <tr>
-                        <td className="w-1/4 text-left p-2">Customer</td>
+                        <td className="w-1/4 text-left p-2">Party</td>
                         <td className="w-1/4 text-left">Salesmen</td>
                         <td className="w-1/4 text-left">Total</td>
                         <td className="w-1/4 text-left">ٰItems</td>
@@ -52,11 +53,11 @@ export default function SalesPage() {
                 <tbody className="divide-y divide-gray-200 text-sm bg-white">
                     {salesList.map((sale: any) => (
                         <tr key={sale.id}>
-                            <td className="p-2">{sale.customer.name}</td>
+                            <td className="p-2">{sale.party?.name ?? 'Cash'}</td>
                             <td>{sale.user.name}</td>
                             <td>RS {sale.total}</td>
-                            <td>{sale._count.OrderDetail}</td>
-                            <td>{(sale.createdAt)}</td>
+                            <td>{sale._count.items}</td>
+                            <td>{formatDate(sale.createdAt)}</td>
                             <td className="text-center flex justify-center gap-x-2">
                                 <Link href={`/admin/sales/${sale.id}`} >
                                     <Eye className="h-5 w-5" />

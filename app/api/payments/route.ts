@@ -10,50 +10,37 @@ export async function GET(req: Request) {
         const pageSize = Number(url.searchParams.get('pageSize')) || 15;
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.sellerWalletTransaction.findMany({
+        const rows = await db.payment.findMany({
             skip,
             take,
             orderBy: {
                 createdAt: 'desc',
             },
             include: {
-                wallet: {
-                    include: {
-                        seller: true,
-                    },
-                },
+                party: true,
+                paymentType: true,
             },
             where: {
-                type: {
-                    equals: 'payment',
-                },
                 AND: {
+                    ispayment: true,
                     OR: [
                         {
-                            wallet: {
-                                seller: {
-                                    name: {
-                                        contains: url.searchParams.get('s') || '',
-                                    },
+                            party: {
+                                name: {
+                                    contains: url.searchParams.get('s') || '',
                                 },
                             },
                         },
                         {
-                            description: {
+                            note: {
                                 contains: url.searchParams.get('s') || '',
                             },
                         },
                     ]
-                },
+                }
             },
         });
-        const totalPosts = await db.sellerWalletTransaction.count({
-            where: {
-                type: {
-                    equals: 'payment',
-                }
-            }
-        });
+        const totalPosts = await db.payment.count({});
         const totalPages = Math.ceil(totalPosts / take);
         return Response.json({
             rows,
@@ -68,34 +55,32 @@ export async function GET(req: Request) {
 export async function POST(req: NextRequest) {
     try {
         const data = await req.json();
-        const sellerId = data.sellerId;
+        const partyId = data.partyId;
         const total = Number(data.amount);
+        console.log(data);
         await db.$transaction(async (prisma) => {
-
-            let wallet = await prisma.sellerWallet.findFirst({
-                where: { sellerId },
+            const payment = await prisma.payment.create({
+                data: {
+                    partyId,
+                    amount: total,
+                    note: data.note,
+                    paymentTypeId: data.paymentTypeId,
+                },
             });
 
-            if (!wallet) {
-                wallet = await prisma.sellerWallet.create({
-                    data: {
-                        sellerId,
-                        balance: total,
-                    },
-                });
-            } else {
-                wallet = await prisma.sellerWallet.update({
-                    where: { id: wallet.id },
-                    data: { balance: wallet.balance - total },
-                });
-            }
-
-            await prisma.sellerWalletTransaction.create({
+            let ledger = await prisma.ledger.findFirst({
+                where: { partyId },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            });
+            await prisma.ledger.create({
                 data: {
-                    amount: total,
-                    type: 'payment',
-                    description: data.description,
-                    walletId: wallet.id,
+                    partyId,
+                    reference: data.note,
+                    debit: 0,
+                    credit: total,
+                    balance: ledger ? ledger.balance + total : total,
                 },
             });
         });

@@ -10,7 +10,7 @@ export async function GET(req: Request) {
         const pageSize = Number(url.searchParams.get('pageSize')) || 10;
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.order.findMany({
+        const rows = await db.sale.findMany({
             skip,
             take,
             orderBy: {
@@ -18,13 +18,13 @@ export async function GET(req: Request) {
             },
             include: {
                 user: true,
-                customer: true,
+                party: true,
                 _count: {
-                    select: { OrderDetail: true }
+                    select: { items: true }
                 },
             },
         });
-        const totalPosts = await db.order.count({});
+        const totalPosts = await db.sale.count({});
         const totalPages = Math.ceil(totalPosts / take);
         return Response.json({
             rows,
@@ -40,28 +40,29 @@ export async function POST(req: NextRequest) {
     try {
         const data = await req.json();
         const session = await auth();
-        const userId = session?.user?.id || '';
-        const customerId = data.customer_id;
+        const userId = Number(session?.user?.id);
+        const partyId = data.partyId;
         const total = Number(data.total);
-
         await db.$transaction(async (prisma) => {
-            const sale = await prisma.order.create({
+            const sale = await prisma.sale.create({
                 data: {
                     total,
+                    partyId: partyId ?? null,
                     userId,
-                    customerId,
+                    paymentTypeId: data.paymentTypeId, // or any appropriate value
+                    discount: data.discount,
                 },
             });
 
             const orderDetails = data.items.map((item: any) => ({
-                orderId: sale.id,
+                saleId: sale.id,
                 productId: item.id,
                 quantity: Number(item.qty),
                 discount: item.discount,
                 price: item.price,
             }));
 
-            await prisma.orderDetail.createMany({
+            await prisma.saleDetail.createMany({
                 data: orderDetails,
             });
 
@@ -78,37 +79,25 @@ export async function POST(req: NextRequest) {
             });
 
             await Promise.all(productUpdates);
-
-            let wallet = await prisma.customerWallet.findFirst({
-                where: { customerId },
-            });
-
-            if (!wallet) {
-                wallet = await prisma.customerWallet.create({
+            if (partyId) {
+                let balance = await prisma.ledger.findFirst({
+                    where: { partyId },
+                    orderBy: { createdAt: 'desc' },
+                });
+                await prisma.ledger.create({
                     data: {
-                        customerId,
-                        balance: -total,
+                        openBalance: balance?.balance || 0.00,
+                        debit: total,
+                        balance: balance?.balance ? Number(balance.balance) - total : -total,
+                        reference: `Sale of #[${sale.id}]`,
+                        partyId,
                     },
                 });
-            } else {
-                wallet = await prisma.customerWallet.update({
-                    where: { id: wallet.id },
-                    data: { balance: wallet.balance - total },
-                });
             }
-
-            await prisma.customerWalletTransaction.create({
-                data: {
-                    amount: total,
-                    type: 'sale',
-                    description: `Sale of #[${sale.id}]`,
-                    walletId: wallet.id,
-                },
-            });
         });
         return NextResponse.json({ message: 'success' });
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ message: 'error' }, { status: 500 });
+        console.log(error);
+        return NextResponse.json({ message: error }, { status: 500 });
     }
 }

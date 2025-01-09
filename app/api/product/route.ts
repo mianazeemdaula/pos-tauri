@@ -66,13 +66,14 @@ export async function PUT(req: Request) {
 }
 
 export async function POST(request: Request) {
-    try {
-        const data = await request.json();
-        const product = await db.product.create({
-            data: data,
-        });
-        return Response.json(product);
-    } catch (error) {
-        return Response.json({ error: (error as Error).message }, { status: 500 });
-    }
+    // try {
+    const data = await request.json();
+    console.log(data);
+    const product = await db.product.create({
+        data: data,
+    });
+    return Response.json(product);
+    // } catch (error) {
+    //     return Response.json({ error: (error as Error).message }, { status: 500 });
+    // }
 }

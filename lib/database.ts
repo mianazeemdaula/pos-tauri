@@ -1,5 +1,4 @@
 "use server";
-
 import { db } from "@/prisma/db";
 
 export async function products() {
@@ -8,12 +7,12 @@ export async function products() {
 }
 
 export async function sales({ user = false, customer = false }: { user?: boolean, customer?: boolean }) {
-    const rows = await db.order.findMany({
+    const rows = await db.sale.findMany({
         include: {
             user: user,
-            customer: customer,
+            party: customer,
             _count: {
-                select: { OrderDetail: true }
+                select: { items: true }
             },
         },
     });
@@ -26,19 +25,17 @@ export async function categories() {
 }
 
 export async function customers() {
-    const rows = await db.customer.findMany({
-        include: {
-            wallet: true,
-        }
+    const rows = await db.party.findMany({
     });
     return rows;
 }
 
-export async function sellers() {
-    const rows = await db.seller.findMany({
-        include: {
-            wallet: true,
-        }
-    });
+export async function parties() {
+    const rows = await db.party.findMany({});
+    return rows;
+}
+
+export async function paymentTypes() {
+    const rows = await db.paymentType.findMany({});
     return rows;
 }

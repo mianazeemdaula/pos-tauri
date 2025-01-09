@@ -15,7 +15,7 @@ interface ProductModalProps {
 }
 
 const formSchema = z.object({
-    categoryId: z.string().min(1),
+    categoryId: z.number().min(1),
     code: z.string().min(3).max(64),
     name: z.string().min(3).max(50),
     nameUr: z.string().min(3).max(60),
@@ -98,12 +98,12 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                     <div className="grid grid-cols-2 gap-2">
                         <div className="">
                             <label className="block mb-2 font-medium">Category</label>
-                            <Select options={[]} {...register('categoryId')}>
+                            <Select options={[]} {...register('categoryId', { valueAsNumber: true })}>
                                 {categoriesList.map((cateogory) => (
                                     <option key={cateogory.id} value={cateogory.id} >{cateogory.name}</option>
                                 ))}
                             </Select>
-                            {errors.category && <p className="text-sm text-red-500 mt-1">{errors.category.message?.toString()}</p>}
+                            {errors.categoryId && <p className="text-sm text-red-500 mt-1">{errors.categoryId.message?.toString()}</p>}
                         </div>
                         <div className="">
                             <label className="block mb-2 font-medium">Name</label>

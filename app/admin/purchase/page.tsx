@@ -1,15 +1,16 @@
 "use client"
 import { useEffect, useState } from "react"
-import { products, sellers } from "@/lib/database";
-import { Product, Seller } from "@prisma/client";
+import { products, parties } from "@/lib/database";
+import { Product, Party } from "@prisma/client";
 import { CircleX, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import Label from "@/components/ui/label";
 import SearchProductModal from "@/components/dialogs/serach_products";
 import hotkeys from "hotkeys-js";
+import Select from "@/components/ui/select";
 
 interface PurchaseItem {
-    id: string;
+    id: Number;
     code: string;
     name: string;
     qty: number;
@@ -21,7 +22,7 @@ interface PurchaseItem {
 
 export default function SalePage() {
 
-    const [customersList, setCustomerList] = useState<Seller[]>([]);
+    const [customersList, setCustomerList] = useState<Party[]>([]);
     const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
     const [sellerBalance, setSellerBalance] = useState(0);
     const [productList, setProductList] = useState<Product[]>([]);
@@ -50,11 +51,13 @@ export default function SalePage() {
     }, [searchOpen]);
 
     async function getSellers() {
-        const p = await sellers();
+        const p = await parties();
         if (p.length > 0) {
             setCustomerList(p);
-            setSelectedSellerId(p[0].id);
-            setSellerBalance(p[0].wallet?.balance || 0);
+            setSelectedSellerId(p[0].id.toString());
+            // if (p[0].ledgers && p[0].ledgers.length > 0) {
+            //     setSellerBalance(p[0].ledgers[0]?.balance || 0);
+            // }
         }
     }
     useEffect(() => {
@@ -77,7 +80,7 @@ export default function SalePage() {
         }
     };
 
-    async function addToCard(id: string) {
+    async function addToCard(id: Number) {
         const product = productList.find((i) => i.id == id);
         if (product) {
             const cartItem = itemList.find((i) => i.id == product.id);
@@ -115,7 +118,7 @@ export default function SalePage() {
         }
     }
 
-    function removeFromCart(id: string) {
+    function removeFromCart(id: Number) {
         setItemList((prevItems) => prevItems.filter((item) => item.id !== id));
     }
 
@@ -128,7 +131,10 @@ export default function SalePage() {
                     total: totalAmount,
                     discount: totalDiscount,
                     qty: totalQty,
-                    seller_id: selectedSellerId,
+                    partyId: selectedSellerId,
+                    purchaseDate: new Date(),
+                    invoiceDate: new Date(),
+                    invoiceNo: Math.floor(Math.random() * 1000000),
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -161,17 +167,17 @@ export default function SalePage() {
             <div className="flex items-center justify-between space-x-4 my-2">
                 <div>
                     <Label htmlFor="customer_id">Company</Label>
-                    <select className="px-3 py-2 w-48" name="customer_id" onChange={(e) => {
+                    <Select name="customer_id" onChange={(e) => {
                         setSelectedSellerId(e.target.value);
-                        const customer: any = customersList.find((c) => c.id == e.target.value);
+                        const customer: any = customersList.find((c) => c.id === Number(e.target.value));
                         if (customer) {
                             setSellerBalance(customer?.wallet?.balance || 0);
                         }
-                    }}>
+                    }} options={[]}>
                         {customersList.map((c) => (
                             <option key={c.id} value={c.id}> {c.name} </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
                 <div className="w-48 text-right">
                     <Label htmlFor="customer_balance">Balance</Label>
@@ -202,7 +208,7 @@ export default function SalePage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
                         {itemList.map((item) => (
-                            <tr key={item.id}>
+                            <tr key={item.code}>
                                 <td className="p-2">{item.code}</td>
                                 <td className="p-2">{item.name}</td>
                                 <td className="p-2">{item.price}</td>

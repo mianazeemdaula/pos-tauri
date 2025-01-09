@@ -1,41 +1,40 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Customer } from "@prisma/client";
-import CustomerModal from "@/components/dialogs/customer";
+import { Party } from "@prisma/client";
+import CustomerModal from "@/components/dialogs/party";
 import { FilePenLine, Plus, Wallet } from "lucide-react";
 import Link from "next/link";
 import Pagination from "@/components/ui/pagination";
 
-export default function CategororyPage() {
+export default function PartiesPage() {
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [selectedParty, setSelectedParty] = useState<Party | null>(null);
     const [search, setSearch] = useState("");
-    const [customerList, setCustomerList] = useState<Customer[]>([]);
+    const [partiesList, setPartiesList] = useState<Party[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
     const handleNextPage = () => setPage((prev) => Math.min(prev + 1, totalPages));
     const handlePreviousPage = () => setPage((prev) => Math.max(prev - 1, 1));
 
-
     useEffect(() => {
         async function getCustomers() {
-            const p = await fetch('/api/customer?page=' + page + '&s=' + search);
+            const p = await fetch('/api/parties?page=' + page + '&s=' + search);
             const data = await p.json();
-            setCustomerList(data.customers);
+            setPartiesList(data.parties);
             setTotalPages(data.meta.totalPages);
         }
         getCustomers();
     }, [search, page]);
 
-    const handleOpenModal = (item: Customer | null = null) => {
-        setSelectedCustomer(item);
+    const handleOpenModal = (item: Party | null = null) => {
+        setSelectedParty(item);
         setModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setModalOpen(false);
-        setSelectedCustomer(null);
+        setSelectedParty(null);
     };
 
     return (
@@ -63,18 +62,18 @@ export default function CategororyPage() {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                    {customerList.map((customer: any) => (
+                    {partiesList.map((customer: any) => (
                         <tr key={customer.id}>
                             <td className="p-2">{customer.phone}</td>
                             <td>{customer.name}</td>
                             <td>{customer.city}</td>
                             <td>{customer.address}</td>
-                            <td>RS. {customer.wallet?.balance ?? 0}</td>
+                            <td>RS. {customer.ledgers[0]?.balance ?? 0}</td>
                             <td className="text-center flex space-x-2 items-center justify-center">
                                 <button onClick={() => handleOpenModal(customer)} >
                                     <FilePenLine className="h-5 w-5" />
                                 </button>
-                                <Link href={`/admin/customers/${customer.id}`} onClick={() => { }} >
+                                <Link href={`/admin/parties/${customer.id}`} onClick={() => { }} >
                                     <Wallet className="h-5 w-5" />
                                 </Link>
                             </td>
@@ -86,7 +85,7 @@ export default function CategororyPage() {
             <CustomerModal
                 isOpen={modalOpen}
                 onClose={handleCloseModal}
-                initialData={selectedCustomer}
+                initialData={selectedParty}
             />
         </>
     )

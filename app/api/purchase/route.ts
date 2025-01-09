@@ -18,13 +18,13 @@ export async function GET(req: Request) {
             },
             include: {
                 user: true,
-                seller: true,
+                party: true,
                 _count: {
                     select: { PurchaseDetail: true }
                 },
             },
         });
-        const totalPosts = await db.order.count({});
+        const totalPosts = await db.purchase.count({});
         const totalPages = Math.ceil(totalPosts / take);
         return Response.json({
             rows,
@@ -41,14 +41,19 @@ export async function POST(req: NextRequest) {
         const data = await req.json();
         const session = await auth();
         const userId = session?.user?.id || '';
-        const sellerId = data.seller_id;
+        const partyId = Number(data.partyId);
         const total = Number(data.total);
+        console.log(data);
         await db.$transaction(async (prisma) => {
             const purchase = await prisma.purchase.create({
                 data: {
                     total,
-                    userId,
-                    sellerId,
+                    discount: data.discount,
+                    partyId: partyId,
+                    userId: Number(userId),
+                    invoiceDate: new Date(data.invoiceDate),
+                    invoiceNo: data.invoiceNo.toString(),
+                    purchseDate: new Date(data.purchaseDate),
                 },
             });
 
@@ -78,30 +83,20 @@ export async function POST(req: NextRequest) {
 
             await Promise.all(productUpdates);
 
-            let wallet = await prisma.sellerWallet.findFirst({
-                where: { sellerId },
+            let wallet = await prisma.ledger.findFirst({
+                where: { partyId },
+                orderBy: {
+                    createdAt: 'desc',
+                },
             });
 
-            if (!wallet) {
-                wallet = await prisma.sellerWallet.create({
-                    data: {
-                        sellerId,
-                        balance: total,
-                    },
-                });
-            } else {
-                wallet = await prisma.sellerWallet.update({
-                    where: { id: wallet.id },
-                    data: { balance: wallet.balance + total },
-                });
-            }
-
-            await prisma.sellerWalletTransaction.create({
+            await prisma.ledger.create({
                 data: {
-                    amount: total,
-                    type: 'purchase',
-                    description: `Purchase of #[${purchase.id}]`,
-                    walletId: wallet.id,
+                    partyId,
+                    reference: `Purchase of #[${purchase.id}]`,
+                    debit: total,
+                    credit: 0,
+                    balance: wallet ? wallet.balance - total : -total,
                 },
             });
         });

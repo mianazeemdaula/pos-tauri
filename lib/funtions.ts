@@ -14,7 +14,6 @@ export function formatDate(date: number | Date | string | undefined) {
     if (typeof date === 'string') {
         date = new Date(date);
     }
-
     return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 

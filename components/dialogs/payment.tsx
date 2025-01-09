@@ -1,24 +1,25 @@
-import { Seller, SellerWalletTransaction } from "@prisma/client";
+import { Party, Payment, PaymentType } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { useEffect, useState } from "react";
-import { sellers } from "@/lib/database";
+import { parties, paymentTypes } from "@/lib/database";
 import Select from "../ui/select";
 import Label from "../ui/label";
 
 interface PaymnetModalProps {
     isOpen: boolean;
     onClose: () => void;
-    initialData: SellerWalletTransaction | null;
+    initialData: Payment | null;
 }
 
 const formSchema = z.object({
-    sellerId: z.string().min(1),
+    partyId: z.number().min(1),
     amount: z.number().min(1),
-    description: z.string().min(3).max(100),
+    paymentTypeId: z.number().min(1),
+    note: z.string().min(3).max(100),
 });
 
 export default function PaymentModal({ isOpen, onClose, initialData }: PaymnetModalProps) {
@@ -33,20 +34,24 @@ export default function PaymentModal({ isOpen, onClose, initialData }: PaymnetMo
         resolver: zodResolver(formSchema),
     });
 
-    const [sellersList, setSellersList] = useState<Seller[]>([]);
-
-
-    async function getSellers() {
-        const res = await sellers();
-        setSellersList(res);
-    }
+    const [sellersList, setSellersList] = useState<Party[]>([]);
+    const [paymentTypesList, setPaymentTypesList] = useState<PaymentType[]>([]);
 
     useEffect(() => {
+        async function getSellers() {
+            const res = await parties();
+            setSellersList(res);
+        }
+        async function getPaymentTypes() {
+            const res = await paymentTypes();
+            setPaymentTypesList(res);
+        }
         if (initialData) {
         } else {
             reset();
         }
         getSellers();
+        getPaymentTypes();
     }, [initialData]);
 
     async function onSubmit(data: any) {
@@ -82,18 +87,27 @@ export default function PaymentModal({ isOpen, onClose, initialData }: PaymnetMo
                 </h2>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
                     <div className="">
-                        <Label htmlFor="sellerId">Seller</Label>
-                        <Select options={[]} {...register('sellerId')}>
+                        <Label htmlFor="partyId">Party</Label>
+                        <Select options={[]} {...register('partyId', { valueAsNumber: true })}>
                             {sellersList.map((seller) => (
                                 <option key={seller.id} value={seller.id} >{seller.name}</option>
                             ))}
                         </Select>
-                        {errors.sellerId && <p className="text-sm text-red-500 mt-1">{errors.sellerId.message?.toString()}</p>}
+                        {errors.partyId && <p className="text-sm text-red-500 mt-1">{errors.partyId.message?.toString()}</p>}
                     </div>
                     <div className="">
-                        <Label htmlFor="description">Description</Label>
-                        <Input {...register('description')} type="text" placeholder="Enter note" />
-                        {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message?.toString()}</p>}
+                        <Label htmlFor="paymentTypeId">Payment Type</Label>
+                        <Select options={[]} {...register('paymentTypeId', { valueAsNumber: true })}>
+                            {paymentTypesList.map((type) => (
+                                <option key={type.id} value={type.id} >{type.name}</option>
+                            ))}
+                        </Select>
+                        {errors.paymentTypeId && <p className="text-sm text-red-500 mt-1">{errors.paymentTypeId.message?.toString()}</p>}
+                    </div>
+                    <div className="">
+                        <Label htmlFor="note">Description</Label>
+                        <Input {...register('note')} type="text" placeholder="Enter note" />
+                        {errors.note && <p className="text-sm text-red-500 mt-1">{errors.note.message?.toString()}</p>}
                     </div>
                     <div className="">
                         <Label htmlFor="amount">Amount</Label>

@@ -14,25 +14,35 @@ const categories: Prisma.CategoryCreateInput[] = [
     { name: 'Other', slug: 'other' },
 ];
 
-const customers: Prisma.CustomerCreateInput[] = [
-    { name: 'Cash', phone: '1234567890', city: 'Depalpur', address: '123 Main St' },
-    { name: 'Ali', phone: '1234567890', city: 'Lahore', address: '123 Main St' },
-    { name: 'Ahmed', phone: '1234567890', city: 'Karachi', address: '123 Main St' },
-    { name: 'Asad', phone: '1234567890', city: 'Islamabad', address: '123 Main St' },
-    { name: 'Ahsan', phone: '1234567890', city: 'Peshawar', address: '123 Main St' },
-    { name: 'Aamir', phone: '1234567890', city: 'Quetta', address: '123 Main St' },
-    { name: 'Adeel', phone: '1234567890', city: 'Multan', address: '123 Main St' },
-    { name: 'Afaq', phone: '1234567890', city: 'Faisalabad', address: '123 Main St' },
-    { name: 'Aftab', phone: '1234567890', city: 'Sialkot', address: '123 Main St' },
-    { name: 'Arif', phone: '1234567890', city: 'Gujranwala', address: '123 Main St' },
-];
-
-const sellers: Prisma.SellerCreateInput[] = [
+const parties: Prisma.PartyCreateInput[] = [
     { name: 'Al itehad PVC', phone: '1234567890', city: 'Depalpur', address: '123 Main St' },
     { name: 'Punjab Pipes', phone: '1234567890', city: 'Lahore', address: '123 Main St' },
     { name: 'Sindh Fittings', phone: '1234567890', city: 'Karachi', address: '123 Main St' },
     { name: 'Balochistan Valves', phone: '1234567890', city: 'Islamabad', address: '123 Main St' },
     { name: 'KPK Pumps', phone: '1234567890', city: 'Peshawar', address: '123 Main St' },
+    { name: 'Ali Chohan', phone: '1234567890', city: 'Depalpur', address: '123 Main St' },
+    { name: 'Noman Ahmad', phone: '1234567890', city: 'Lahore', address: '123 Main St' },
+];
+
+const paymentTypes: Prisma.PaymentTypeCreateInput[] = [
+    { name: 'Cash', },
+    { name: 'Credit', },
+    { name: 'Cheque', },
+    { name: 'Bank Transfer' },
+    { name: 'Online', },
+    { name: 'Other' },
+];
+
+const prodcuts: Prisma.ProductCreateInput[] = [
+    { name: 'PVC Pipe', price: 250, discount: 5, code: 'A0001', stock: 100, category: { connect: { slug: 'pipes' } }, },
+    { name: 'PVC Fitting', price: 150, discount: 4, code: 'A0002', stock: 100, category: { connect: { slug: 'fittings' } }, },
+    { name: 'PVC Valve', price: 200, discount: 6, code: 'A0003', stock: 100, category: { connect: { slug: 'valves' } }, },
+    { name: 'PVC Pump', price: 300, discount: 5.5, code: 'A0004', stock: 100, category: { connect: { slug: 'pumps' } }, },
+    { name: 'PVC Tool', price: 100, discount: 8.5, code: 'A0005', stock: 100, category: { connect: { slug: 'tools' } }, },
+    { name: 'PVC Electrical', price: 150, discount: 12, code: 'A0006', stock: 100, category: { connect: { slug: 'electrical' } }, },
+    { name: 'PVC Hose', price: 50, discount: 15, code: 'A0007', stock: 100, category: { connect: { slug: 'hoses' } }, },
+    { name: 'PVC Accessory', price: 50, discount: 22.50, code: 'A0008', stock: 100, category: { connect: { slug: 'accessories' } }, },
+    { name: 'PVC Other', price: 50, discount: 5.7, code: 'A0009', stock: 100, category: { connect: { slug: 'other' } }, },
 ];
 
 
@@ -49,14 +59,20 @@ async function main() {
             data: category,
         })
     }
-    for (const customer of customers) {
-        await prisma.customer.create({
-            data: customer,
+    for (const party of parties) {
+        await prisma.party.create({
+            data: party,
         })
     }
-    for (const seller of sellers) {
-        await prisma.seller.create({
-            data: seller,
+    for (const paymentType of paymentTypes) {
+        await prisma.paymentType.create({
+            data: paymentType,
+        })
+    }
+
+    for (const product of prodcuts) {
+        await prisma.product.create({
+            data: product,
         })
     }
 }

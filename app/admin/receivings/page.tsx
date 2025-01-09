@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { CustomerWalletTransaction } from "@prisma/client";
+import { Payment } from "@prisma/client";
 import { FilePenLine, Plus } from "lucide-react";
 import Pagination from "@/components/ui/pagination";
 import { formatDate } from "@/lib/funtions";
@@ -9,8 +9,8 @@ import ReceivingModal from "@/components/dialogs/receiving";
 export default function ReceivingsPage() {
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedPayment, setSelectedPayment] = useState<CustomerWalletTransaction | null>(null);
-    const [payments, setPayments] = useState<CustomerWalletTransaction[]>([]);
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+    const [payments, setPayments] = useState<Payment[]>([]);
 
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -30,7 +30,7 @@ export default function ReceivingsPage() {
         getPayments();
     }, [page, search]);
 
-    const handleOpenModal = (item: CustomerWalletTransaction | null = null) => {
+    const handleOpenModal = (item: Payment | null = null) => {
         setSelectedPayment(item);
         setModalOpen(true);
     };
@@ -56,7 +56,8 @@ export default function ReceivingsPage() {
             <table className="table-fixed w-full mt-4 border-collapse">
                 <thead className="bg-gray-100 text-sm">
                     <tr>
-                        <td className="w-1/4 text-left p-2">Customer</td>
+                        <td className="w-1/4 text-left p-2">Party</td>
+                        <td className="w-1/4 text-left p-2">Mode</td>
                         <td className="w-1/4 text-left p-2">Description</td>
                         <td className="w-1/4 text-left p-2">Amount</td>
                         <td className="w-1/4 text-left">Date Time</td>
@@ -66,8 +67,9 @@ export default function ReceivingsPage() {
                 <tbody className="divide-y divide-gray-200 text-sm bg-white">
                     {payments.map((payment: any) => (
                         <tr key={payment.id}>
-                            <td className="p-2">{payment.wallet.customer.name}</td>
-                            <td className="p-2">{payment.description}</td>
+                            <td className="p-2">{payment.party.name}</td>
+                            <td className="p-2">{payment.paymentType.name}</td>
+                            <td className="p-2">{payment.note}</td>
                             <td className="p-2">{payment.amount}</td>
                             <td>{formatDate(payment.createdAt)}</td>
                             <td className="text-center">

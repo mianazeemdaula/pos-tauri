@@ -1,28 +1,26 @@
 "use client"
 import { useEffect, useState } from "react"
-import { customers, products } from "@/lib/database";
-import { Customer, Product } from "@prisma/client";
-import { Delete, Plus, Search } from "lucide-react";
+import { Party, PaymentType, Product } from "@prisma/client";
+import { CircleX, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import Label from "@/components/ui/label";
-
-interface SaleItem {
-    id: string;
-    sku: string;
-    name: string;
-    qty: number;
-    price: number;
-    discount: number;
-    discountPercent: number;
-    total: number;
-}
+import SearchProductModal from "@/components/dialogs/serach_products";
+import CartItemEditModal from "@/components/dialogs/cartitem_edit";
+import { SaleItem } from "@/lib/datatypes";
+import SearchPartyModal from "@/components/dialogs/serach_party";
+import Select from "@/components/ui/select";
 
 export default function SalePage() {
 
-    const [customersList, setCustomerList] = useState<Customer[]>([]);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+    const [selectParty, setSelectedParty] = useState<Party | null>(null);
     const [customerBalance, setCustomerBalance] = useState(0);
     const [itemList, setItemList] = useState<SaleItem[]>([])
+    const [paymentTypesList, setPaymentTypes] = useState<PaymentType[]>([])
+    const [paymentType, setPaymentType] = useState<number>(1);
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [partySearchOpen, setPartySearchOpen] = useState(false);
+    const [cartItemEditOpen, setCartItemEditOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<SaleItem | null>(null);
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -30,15 +28,16 @@ export default function SalePage() {
 
 
     useEffect(() => {
-        async function getCustomers() {
-            const p = await customers();
-            setCustomerList(p);
-            setSelectedCustomerId(p[0].id);
-            setCustomerBalance(p[0].wallet?.balance || 0);
+        async function getPaymentTypes() {
+            const p = await fetch('/api/payment_types');
+            const data = await p.json();
+            setPaymentTypes(data);
         }
-        getCustomers();
-    }, [])
-
+        getPaymentTypes();
+        return () => {
+            setPaymentTypes([]);
+        }
+    }, []);
 
     async function findProduct(sku: string) {
         const product = await fetch('/api/product/' + sku);
@@ -104,7 +103,8 @@ export default function SalePage() {
                     total: totalAmount,
                     discount: totalDiscount,
                     qty: totalQty,
-                    customer_id: selectedCustomerId,
+                    partyId: selectParty?.id,
+                    paymentTypeId: paymentType,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,6 +119,29 @@ export default function SalePage() {
             toast.error('Error: ' + (error as Error).message);
         }
     }
+
+    function openEditModal(item: SaleItem) {
+        setSelectedItem(item);
+        setCartItemEditOpen(true);
+    }
+
+    function closeEditModal(item: any) {
+        if (item) {
+            console.log(item);
+            const qty = item.qty;
+            const discount = ((item.price * item.discount) / 100) * qty;
+            const total = (qty * item.price) - (discount);
+            setItemList((prevItems) =>
+                prevItems.map((i) =>
+                    i.id === item.id
+                        ? { ...i, qty: qty, total: total, discount: discount, discountPercent: item.discount, price: item.price }
+                        : i
+                )
+            );
+        }
+        setCartItemEditOpen(false);
+    }
+
 
 
     return (
@@ -135,30 +158,27 @@ export default function SalePage() {
 
             <div className="flex items-center justify-between space-x-4 my-2">
                 <div>
-                    <Label htmlFor="customer_id">Customer</Label>
-                    <select className="px-3 py-2 w-48" name="customer_id" onChange={(e) => {
-                        setSelectedCustomerId(e.target.value);
-                        const customer: any = customersList.find((c) => c.id == e.target.value);
-                        if (customer) {
-                            setCustomerBalance(customer?.wallet?.balance || 0);
+                    <div className="flex items-center gap-x-2">
+                        <button onClick={() => setPartySearchOpen(!partySearchOpen)} className="bg-gray-100 text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary transition-colors hover:text-white">Search</button>
+                        {selectParty &&
+                            <div>
+                                <div className="text-sm">{selectParty?.name}</div>
+                                <div className="text-sm">{selectParty?.phone}</div>
+                            </div>
                         }
-                    }}>
-                        {customersList.map((c) => (
-                            <option key={c.id} value={c.id}> {c.name} </option>
-                        ))}
-                    </select>
+                    </div>
                 </div>
                 <div className="w-48 text-right">
                     <Label htmlFor="customer_balance">Balance</Label>
-                    <div><span className="font-bold">RS.</span> {customerBalance}</div>
+                    <div><span className="font-bold">RS.</span> {customerBalance ?? 0}</div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between space-x-4">
-                <input type="text" name="" id="" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} />
+                <input type="text" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} placeholder="SKU or scan barcode" />
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
-                    onClick={() => { }}
+                    onClick={() => { setSearchOpen(!searchOpen) }}
                 ><Search className="h-5 w-5" /> Search
                 </button>
             </div>
@@ -177,7 +197,7 @@ export default function SalePage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
                         {itemList.map((sale) => (
-                            <tr key={sale.id}>
+                            <tr key={sale.id} onDoubleClick={() => { openEditModal(sale) }}>
                                 <td className="p-2">{sale.sku}</td>
                                 <td className="p-2">{sale.name}</td>
                                 <td className="p-2">{sale.price}</td>
@@ -186,7 +206,7 @@ export default function SalePage() {
                                 <td>{sale.total}</td>
                                 <td className="text-center">
                                     <button onClick={() => { }} >
-                                        <Delete className="h-5 w-5" />
+                                        <CircleX className="h-5 w-5" />
                                     </button>
                                 </td>
                             </tr>
@@ -211,10 +231,33 @@ export default function SalePage() {
                         <div className="text-xl">{itemList.length}</div>
                     </div>
                     <div>
-                        <button className="bg-secondary text-white px-4 py-2 rounded-md mt-4" onClick={handleSale}>Sale</button>
+                        <Label htmlFor="payment_type">Payment Type</Label>
+                        <Select name="payment_type" id="payment_type" options={[]} onChange={(e) => setPaymentType(Number(e.target.value))}>
+                            {paymentTypesList.map((type) => (
+                                <option key={type.id} value={type.id}>{type.name}</option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div>
+                        <button className="bg-secondary w-full text-white px-4 py-2 rounded-md mt-4" onClick={handleSale}>Sale</button>
                     </div>
                 </div>
             </div>
+            <SearchProductModal isOpen={searchOpen} onClose={(e) => {
+                setSearchOpen(false);
+                if (e) {
+                    addToCard(e);
+                }
+            }} />
+
+            <SearchPartyModal isOpen={partySearchOpen} onClose={(e) => {
+                setPartySearchOpen(false);
+                if (e) {
+                    setSelectedParty(e);
+                }
+            }} />
+
+            <CartItemEditModal isOpen={cartItemEditOpen} onClose={closeEditModal} initialData={selectedItem} />
         </>
     )
 }

@@ -1,4 +1,4 @@
-import { Customer } from "@prisma/client";
+import { Party } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { useEffect } from "react";
 
-interface CustomerModalProps {
+interface PartyModalProps {
     isOpen: boolean;
     onClose: () => void;
-    initialData: Customer | null;
+    initialData: Party | null;
 }
 
 const formSchema = z.object({
@@ -19,7 +19,7 @@ const formSchema = z.object({
     address: z.string().min(3).max(50),
 });
 
-export default function CustomerModal({ isOpen, onClose, initialData }: CustomerModalProps) {
+export default function CustomerModal({ isOpen, onClose, initialData }: PartyModalProps) {
 
     const {
         register,
@@ -44,7 +44,7 @@ export default function CustomerModal({ isOpen, onClose, initialData }: Customer
 
     async function onSubmit(data: any) {
         try {
-            const res = await fetch('/api/customer', {
+            const res = await fetch('/api/parties', {
                 method: initialData ? 'PUT' : 'POST',
                 body: JSON.stringify({
                     ...data,
@@ -57,7 +57,7 @@ export default function CustomerModal({ isOpen, onClose, initialData }: Customer
             if (!res.ok) {
                 throw new Error(res.statusText);
             }
-            toast.success(initialData ? 'Customer updated' : 'Customer Added');
+            toast.success(initialData ? 'Party updated' : 'Party Added');
             onClose();
         } catch (error) {
             toast.error('Error: ' + (error as Error).message);
@@ -70,7 +70,7 @@ export default function CustomerModal({ isOpen, onClose, initialData }: Customer
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
             <div className="bg-white p-6 rounded shadow-lg w-1/3">
                 <h2 className="text-lg font-bold mb-4">
-                    {initialData ? "Edit Customer" : "Add Customer"}
+                    {initialData ? "Edit Party" : "Add Party"}
                 </h2>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-4">
@@ -82,6 +82,11 @@ export default function CustomerModal({ isOpen, onClose, initialData }: Customer
                         <label className="block mb-2 font-medium">Phone</label>
                         <Input {...register('phone')} type="text" placeholder="Enter phone" />
                         {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone.message?.toString()}</p>}
+                    </div>
+                    <div className="mb-4">
+                        <label className="block mb-2 font-medium">WhatsApp</label>
+                        <Input {...register('whatsApp')} type="text" placeholder="Enter whatsApp" />
+                        {errors.whatsApp && <p className="text-sm text-red-500 mt-1">{errors.whatsApp.message?.toString()}</p>}
                     </div>
                     <div className="mb-4">
                         <label className="block mb-2 font-medium">City</label>

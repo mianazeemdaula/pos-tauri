@@ -1,27 +1,28 @@
-import { Customer, CustomerWalletTransaction, Seller } from "@prisma/client";
+import { Party, Payment, PaymentType } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { useEffect, useState } from "react";
-import { customers } from "@/lib/database";
+import { parties, paymentTypes } from "@/lib/database";
 import Select from "../ui/select";
 import Label from "../ui/label";
 
-interface ReceivingModalProps {
+interface PaymnetModalProps {
     isOpen: boolean;
     onClose: () => void;
-    initialData: CustomerWalletTransaction | null;
+    initialData: Payment | null;
 }
 
 const formSchema = z.object({
-    customerId: z.string().min(1),
+    partyId: z.number().min(1),
     amount: z.number().min(1),
-    description: z.string().min(3).max(100),
+    paymentTypeId: z.number().min(1),
+    note: z.string().min(3).max(100),
 });
 
-export default function ReceivingModal({ isOpen, onClose, initialData }: ReceivingModalProps) {
+export default function ReceivingModal({ isOpen, onClose, initialData }: PaymnetModalProps) {
 
     const {
         register,
@@ -33,20 +34,24 @@ export default function ReceivingModal({ isOpen, onClose, initialData }: Receivi
         resolver: zodResolver(formSchema),
     });
 
-    const [customersList, setCustomersList] = useState<Customer[]>([]);
-
-
-    async function getCustomers() {
-        const res = await customers();
-        setCustomersList(res);
-    }
+    const [sellersList, setSellersList] = useState<Party[]>([]);
+    const [paymentTypesList, setPaymentTypesList] = useState<PaymentType[]>([]);
 
     useEffect(() => {
+        async function getSellers() {
+            const res = await parties();
+            setSellersList(res);
+        }
+        async function getPaymentTypes() {
+            const res = await paymentTypes();
+            setPaymentTypesList(res);
+        }
         if (initialData) {
         } else {
             reset();
         }
-        getCustomers();
+        getSellers();
+        getPaymentTypes();
     }, [initialData]);
 
     async function onSubmit(data: any) {
@@ -78,22 +83,31 @@ export default function ReceivingModal({ isOpen, onClose, initialData }: Receivi
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
             <div className="bg-white p-6 rounded shadow-lg w-4/12">
                 <h2 className="text-lg font-bold mb-4">
-                    {initialData ? "Edit Payment" : "Add Payment"}
+                    {initialData ? "Edit Receving" : "Add Receveing"}
                 </h2>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
                     <div className="">
-                        <Label htmlFor="customerId">Seller</Label>
-                        <Select options={[]} {...register('customerId')}>
-                            {customersList.map((customer) => (
-                                <option key={customer.id} value={customer.id} >{customer.name}</option>
+                        <Label htmlFor="partyId">Party</Label>
+                        <Select options={[]} {...register('partyId', { valueAsNumber: true })}>
+                            {sellersList.map((seller) => (
+                                <option key={seller.id} value={seller.id} >{seller.name}</option>
                             ))}
                         </Select>
-                        {errors.customerId && <p className="text-sm text-red-500 mt-1">{errors.customerId.message?.toString()}</p>}
+                        {errors.partyId && <p className="text-sm text-red-500 mt-1">{errors.partyId.message?.toString()}</p>}
                     </div>
                     <div className="">
-                        <Label htmlFor="description">Description</Label>
-                        <Input {...register('description')} type="text" placeholder="Enter note" />
-                        {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message?.toString()}</p>}
+                        <Label htmlFor="paymentTypeId">Payment Type</Label>
+                        <Select options={[]} {...register('paymentTypeId', { valueAsNumber: true })}>
+                            {paymentTypesList.map((type) => (
+                                <option key={type.id} value={type.id} >{type.name}</option>
+                            ))}
+                        </Select>
+                        {errors.paymentTypeId && <p className="text-sm text-red-500 mt-1">{errors.paymentTypeId.message?.toString()}</p>}
+                    </div>
+                    <div className="">
+                        <Label htmlFor="note">Description</Label>
+                        <Input {...register('note')} type="text" placeholder="Enter note" />
+                        {errors.note && <p className="text-sm text-red-500 mt-1">{errors.note.message?.toString()}</p>}
                     </div>
                     <div className="">
                         <Label htmlFor="amount">Amount</Label>

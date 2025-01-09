@@ -1,6 +1,5 @@
 "use client"
 import { useEffect, useState } from "react"
-import { products } from "@/lib/database";
 import { Product } from "@prisma/client";
 import ProductModal from "@/components/dialogs/product";
 import { FilePenLine, Plus } from "lucide-react";

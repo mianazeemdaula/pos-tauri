@@ -8,7 +8,7 @@ export async function GET(
         const { id } = await params;
         const cat = await db.category.findUnique({
             where: {
-                id: id,
+                id: Number(id),
             }
         });
         return Response.json(cat);

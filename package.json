@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "tauri": "tauri"
+    "lint": "next lint"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -29,7 +28,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tauri-apps/cli": "^2.1.0",
     "@types/node": "^20.17.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",

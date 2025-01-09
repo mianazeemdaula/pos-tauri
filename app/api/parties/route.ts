@@ -10,14 +10,19 @@ export async function GET(req: NextRequest) {
         const search = url.searchParams.get('s') || '';
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const customers = await db.customer.findMany({
+        const parties = await db.party.findMany({
             skip,
             take,
             orderBy: {
                 createdAt: 'desc',
             },
             include: {
-                wallet: true,
+                ledgers: {
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                    take: 1,
+                },
             },
             where: {
                 OR: [
@@ -44,10 +49,10 @@ export async function GET(req: NextRequest) {
                 ],
             },
         });
-        const total = await db.customer.count({});
+        const total = await db.party.count({});
         const totalPages = Math.ceil(total / take);
         return Response.json({
-            customers,
+            parties,
             meta: { total, totalPages, currentPage: page },
         });
     } catch (error) {
@@ -61,13 +66,13 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: Request) {
     try {
         const data = await req.json();
-        const customer = await db.customer.update({
+        const party = await db.party.update({
             where: {
                 id: data.id
             },
             data: data
         });
-        return Response.json(customer);
+        return Response.json(party);
     } catch (error) {
         throw error;
     }
@@ -76,10 +81,10 @@ export async function PUT(req: Request) {
 export async function POST(request: Request) {
     try {
         const data = await request.json();
-        const customer = await db.customer.create({
+        const party = await db.party.create({
             data: data,
         });
-        return Response.json(customer);
+        return Response.json(party);
     } catch (error) {
         throw error;
     }
