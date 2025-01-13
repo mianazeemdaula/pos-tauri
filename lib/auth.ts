@@ -17,8 +17,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         password: credentials.password as string,
                     },
                 })
+
                 if (user) {
-                    return user
+                    return {
+                        ...user,
+                        id: user.id.toString(), // Ensure id is a string
+                    }
                 } else {
                     return null
                 }

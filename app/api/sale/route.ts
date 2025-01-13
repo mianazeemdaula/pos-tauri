@@ -42,11 +42,11 @@ export async function POST(req: NextRequest) {
         const session = await auth();
         const userId = Number(session?.user?.id);
         const partyId = data.partyId;
-        const total = Number(data.total);
+        const totalNetAmount = Number(data.total) - Number(data.discount);
         await db.$transaction(async (prisma) => {
             const sale = await prisma.sale.create({
                 data: {
-                    total,
+                    total: totalNetAmount,
                     partyId: partyId ?? null,
                     userId,
                     paymentTypeId: data.paymentTypeId, // or any appropriate value
@@ -87,8 +87,8 @@ export async function POST(req: NextRequest) {
                 await prisma.ledger.create({
                     data: {
                         openBalance: balance?.balance || 0.00,
-                        debit: total,
-                        balance: balance?.balance ? Number(balance.balance) - total : -total,
+                        debit: totalNetAmount,
+                        balance: balance?.balance ? Number(balance.balance) - totalNetAmount : -totalNetAmount,
                         reference: `Sale of #[${sale.id}]`,
                         partyId,
                     },

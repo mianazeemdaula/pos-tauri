@@ -1,11 +1,11 @@
-import { Category, Product } from "@prisma/client";
+import { Brand, Category, Product } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { useEffect, useState } from "react";
-import { categories } from "@/lib/database";
+import { brands, categories } from "@/lib/database";
 import Select from "../ui/select";
 
 interface ProductModalProps {
@@ -16,12 +16,14 @@ interface ProductModalProps {
 
 const formSchema = z.object({
     categoryId: z.number().min(1),
+    brandId: z.number().min(1),
     code: z.string().min(3).max(64),
     name: z.string().min(3).max(50),
     nameUr: z.string().min(3).max(60),
     price: z.number().min(1),
     discount: z.number().min(0).max(100),
     stock: z.number().min(0),
+    lowStockAlert: z.number().min(0),
 });
 
 export default function ProductModal({ isOpen, onClose, initialData }: ProductModalProps) {
@@ -37,26 +39,31 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
     });
 
     const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+    const [brandsList, setBrandsList] = useState<Brand[]>([]);
 
 
-    async function getCategories() {
+    async function getInitData() {
         const res = await categories();
+        const res2 = await brands();
         setCategoriesList(res);
+        setBrandsList(res2);
     }
 
     useEffect(() => {
+        getInitData();
         if (initialData) {
             setValue('name', initialData.name);
             setValue('code', initialData.code);
             setValue('categoryId', initialData.categoryId);
+            setValue('brandId', initialData.brandId);
             setValue('nameUr', initialData.nameUr);
             setValue('price', initialData.price);
             setValue('discount', initialData.discount);
             setValue('stock', initialData.stock);
+            setValue('lowStockAlert', initialData.lowStockAlert);
         } else {
             reset();
         }
-        getCategories();
     }, [initialData]);
 
     async function onSubmit(data: any) {
@@ -106,6 +113,15 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                             {errors.categoryId && <p className="text-sm text-red-500 mt-1">{errors.categoryId.message?.toString()}</p>}
                         </div>
                         <div className="">
+                            <label className="block mb-2 font-medium">Brand</label>
+                            <Select options={[]} {...register('brandId', { valueAsNumber: true })}>
+                                {brandsList.map((brand) => (
+                                    <option key={brand.id} value={brand.id} >{brand.name}</option>
+                                ))}
+                            </Select>
+                            {errors.brandId && <p className="text-sm text-red-500 mt-1">{errors.brandId.message?.toString()}</p>}
+                        </div>
+                        <div className="">
                             <label className="block mb-2 font-medium">Name</label>
                             <Input {...register('name')} type="text" placeholder="Enter Name" />
                             {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message?.toString()}</p>}
@@ -129,6 +145,11 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                             <label className="block mb-2 font-medium">Stock</label>
                             <Input {...register('stock', { valueAsNumber: true })} type="number" placeholder="Enter stock" />
                             {errors.stock && <p className="text-sm text-red-500 mt-1">{errors.stock.message?.toString()}</p>}
+                        </div>
+                        <div className="">
+                            <label className="block mb-2 font-medium">Low Stock Alert</label>
+                            <Input {...register('lowStockAlert', { valueAsNumber: true })} type="number" placeholder="Enter low stock alert" />
+                            {errors.lowStockAlert && <p className="text-sm text-red-500 mt-1">{errors.lowStockAlert.message?.toString()}</p>}
                         </div>
                     </div>
                     <div className="flex justify-end mt-4">

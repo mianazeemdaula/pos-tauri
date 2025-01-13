@@ -14,6 +14,13 @@ const categories: Prisma.CategoryCreateInput[] = [
     { name: 'Other', slug: 'other' },
 ];
 
+const brands: Prisma.BrandCreateInput[] = [
+    { name: 'Al itehad', slug: 'al-itehad' },
+    { name: 'Adam Gee', slug: 'adam-gee' },
+    { name: 'Dura PVC', slug: 'dura-pvc' },
+    { name: 'Asli Punjab', slug: 'asli-punjab' },
+];
+
 const parties: Prisma.PartyCreateInput[] = [
     { name: 'Al itehad PVC', phone: '1234567890', city: 'Depalpur', address: '123 Main St' },
     { name: 'Punjab Pipes', phone: '1234567890', city: 'Lahore', address: '123 Main St' },
@@ -34,15 +41,15 @@ const paymentTypes: Prisma.PaymentTypeCreateInput[] = [
 ];
 
 const prodcuts: Prisma.ProductCreateInput[] = [
-    { name: 'PVC Pipe', price: 250, discount: 5, code: 'A0001', stock: 100, category: { connect: { slug: 'pipes' } }, },
-    { name: 'PVC Fitting', price: 150, discount: 4, code: 'A0002', stock: 100, category: { connect: { slug: 'fittings' } }, },
-    { name: 'PVC Valve', price: 200, discount: 6, code: 'A0003', stock: 100, category: { connect: { slug: 'valves' } }, },
-    { name: 'PVC Pump', price: 300, discount: 5.5, code: 'A0004', stock: 100, category: { connect: { slug: 'pumps' } }, },
-    { name: 'PVC Tool', price: 100, discount: 8.5, code: 'A0005', stock: 100, category: { connect: { slug: 'tools' } }, },
-    { name: 'PVC Electrical', price: 150, discount: 12, code: 'A0006', stock: 100, category: { connect: { slug: 'electrical' } }, },
-    { name: 'PVC Hose', price: 50, discount: 15, code: 'A0007', stock: 100, category: { connect: { slug: 'hoses' } }, },
-    { name: 'PVC Accessory', price: 50, discount: 22.50, code: 'A0008', stock: 100, category: { connect: { slug: 'accessories' } }, },
-    { name: 'PVC Other', price: 50, discount: 5.7, code: 'A0009', stock: 100, category: { connect: { slug: 'other' } }, },
+    { name: 'PVC Pipe', price: 250, discount: 5, code: 'A0001', stock: 100, category: { connect: { slug: 'pipes' } }, brand: { connect: { slug: 'al-itehad' } } },
+    { name: 'PVC Fitting', price: 150, discount: 4, code: 'A0002', stock: 100, category: { connect: { slug: 'fittings' } }, brand: { connect: { slug: 'adam-gee' } } },
+    { name: 'PVC Valve', price: 200, discount: 6, code: 'A0003', stock: 100, category: { connect: { slug: 'valves' } }, brand: { connect: { slug: 'dura-pvc' } } },
+    { name: 'PVC Pump', price: 300, discount: 5.5, code: 'A0004', stock: 100, category: { connect: { slug: 'pumps' } }, brand: { connect: { slug: 'asli-punjab' } } },
+    { name: 'PVC Tool', price: 100, discount: 8.5, code: 'A0005', stock: 100, category: { connect: { slug: 'tools' } }, brand: { connect: { slug: 'al-itehad' } } },
+    { name: 'PVC Electrical', price: 150, discount: 12, code: 'A0006', stock: 100, category: { connect: { slug: 'electrical' } }, brand: { connect: { slug: 'adam-gee' } } },
+    { name: 'PVC Hose', price: 50, discount: 15, code: 'A0007', stock: 100, category: { connect: { slug: 'hoses' } }, brand: { connect: { slug: 'dura-pvc' } } },
+    { name: 'PVC Accessory', price: 50, discount: 22.50, code: 'A0008', stock: 100, category: { connect: { slug: 'accessories' } }, brand: { connect: { slug: 'asli-punjab' } } },
+    { name: 'PVC Other', price: 50, discount: 5.7, code: 'A0009', stock: 100, category: { connect: { slug: 'other' } }, brand: { connect: { slug: 'al-itehad' } } },
 ];
 
 
@@ -59,6 +66,12 @@ async function main() {
             data: category,
         })
     }
+    for (const brand of brands) {
+        await prisma.brand.create({
+            data: brand,
+        })
+    }
+
     for (const party of parties) {
         await prisma.party.create({
             data: party,

@@ -90,6 +90,15 @@ model Category {
   Product Product[]
 }
 
+model Brand {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
 model Product {
   id            Int              @id @default(autoincrement())
   name          String
@@ -101,10 +110,13 @@ model Product {
   image         String?
   category      Category         @relation(fields: [categoryId], references: [id])
   categoryId    Int
+  lowStockAlert Int              @default(0)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   saleItems     SaleDetail[]
   purchaseItems PurchaseDetail[]
+  brand         Brand?           @relation(fields: [brandId], references: [id])
+  brandId       Int?
 }
 
 model Party {
@@ -215,4 +227,32 @@ model Ledger {
   updatedAt   DateTime @updatedAt
 
   @@map("ledgers")
+}
+
+model SaleAgent {
+  id        Int               @id @default(autoincrement())
+  code      String            @unique
+  name      String
+  phone     String
+  whatsApp  String?
+  city      String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  ledgers   SaleAgentLedger[]
+}
+
+model SaleAgentLedger {
+  id          String    @id @default(cuid())
+  reference   String?
+  note        String?
+  saleAgent   SaleAgent @relation(fields: [saleAgentId], references: [id])
+  saleAgentId Int
+  openBalance Float     @default(0)
+  debit       Float     @default(0)
+  credit      Float     @default(0)
+  balance     Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("sale_agent_ledgers")
 }

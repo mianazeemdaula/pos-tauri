@@ -5,14 +5,14 @@ export default async function SaledViewPage(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
-    const sale = await db.order.findFirst({
+    const sale = await db.sale.findFirst({
         where: {
-            id: (id),
+            id: Number(id),
         },
         include: {
-            customer: true,
+            party: true,
             user: true,
-            OrderDetail: {
+            items: {
                 include: {
                     product: true,
                 },
@@ -29,9 +29,15 @@ export default async function SaledViewPage(
             <div className="flex gap-4">
                 <div className="bg-white shadow-md rounded p-4 mb-4">
                     <h2 className="text-xl font-bold mb-2">Customer Details</h2>
-                    <p className="text-gray-700"><span className="font-semibold">Name:</span> {sale.customer.name}</p>
-                    <p className="text-gray-700"><span className="font-semibold">City:</span> {sale.customer.city}</p>
-                    <p className="text-gray-700"><span className="font-semibold">Phone:</span> {sale.customer.phone}</p>
+                    {sale.party ? (
+                        <>
+                            <p className="text-gray-700"><span className="font-semibold">Name:</span> {sale.party.name}</p>
+                            <p className="text-gray-700"><span className="font-semibold">City:</span> {sale.party.city}</p>
+                            <p className="text-gray-700"><span className="font-semibold">Phone:</span> {sale.party.phone}</p>
+                        </>
+                    ) : (
+                        <p className="text-gray-700">Cash Sale</p>
+                    )}
                 </div>
                 <div className="bg-white shadow-md rounded p-4 mb-4">
                     <h2 className="text-xl font-bold mb-2">Salesman Details</h2>
@@ -52,7 +58,7 @@ export default async function SaledViewPage(
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                        {sale.OrderDetail.map((od) => (
+                        {sale.items.map((od) => (
                             <tr key={od.id}>
                                 <td className="p-2">{od.product.name}</td>
                                 <td>{od.quantity}</td>

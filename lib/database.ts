@@ -24,6 +24,11 @@ export async function categories() {
     return rows;
 }
 
+export async function brands() {
+    const rows = await db.brand.findMany({});
+    return rows;
+}
+
 export async function customers() {
     const rows = await db.party.findMany({
     });

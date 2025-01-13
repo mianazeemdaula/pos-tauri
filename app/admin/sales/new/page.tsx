@@ -9,6 +9,7 @@ import CartItemEditModal from "@/components/dialogs/cartitem_edit";
 import { SaleItem } from "@/lib/datatypes";
 import SearchPartyModal from "@/components/dialogs/serach_party";
 import Select from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export default function SalePage() {
 
@@ -21,6 +22,7 @@ export default function SalePage() {
     const [partySearchOpen, setPartySearchOpen] = useState(false);
     const [cartItemEditOpen, setCartItemEditOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<SaleItem | null>(null);
+    const [changeAmount, setChangeAmount] = useState<number>(0);
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -127,7 +129,6 @@ export default function SalePage() {
 
     function closeEditModal(item: any) {
         if (item) {
-            console.log(item);
             const qty = item.qty;
             const discount = ((item.price * item.discount) / 100) * qty;
             const total = (qty * item.price) - (discount);
@@ -214,22 +215,29 @@ export default function SalePage() {
                     </tbody>
                 </table >
                 <div className="bg-white w-64 p-4">
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Total </div>
                         <div className="text-xl">{totalAmount}</div>
                     </div>
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Discount </div>
                         <div className="text-xl">{totalDiscount}</div>
                     </div>
-                    <div>
+                    <hr className="my-1 border-dotted" />
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold">Net Total </div>
+                        <div className="text-xl font-bold">{totalAmount - totalDiscount}</div>
+                    </div>
+                    <hr className="my-1 border-dotted" />
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Qty </div>
                         <div className="text-xl">{totalQty}</div>
                     </div>
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Items Count </div>
                         <div className="text-xl">{itemList.length}</div>
                     </div>
+                    <hr className="my-4 border-dotted" />
                     <div>
                         <Label htmlFor="payment_type">Payment Type</Label>
                         <Select name="payment_type" id="payment_type" options={[]} onChange={(e) => setPaymentType(Number(e.target.value))}>
@@ -237,6 +245,16 @@ export default function SalePage() {
                                 <option key={type.id} value={type.id}>{type.name}</option>
                             ))}
                         </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="cashamount">Cash Amount</Label>
+                        <Input type="number" id="cashamount" name="cashamount" onChange={(e) => {
+                            setChangeAmount(Number(e.target.value) - (totalAmount - totalDiscount))
+                        }} />
+                    </div>
+                    <div>
+                        <Label htmlFor="change">Change</Label>
+                        <Input type="number" name="change" readOnly value={changeAmount} />
                     </div>
                     <div>
                         <button className="bg-secondary w-full text-white px-4 py-2 rounded-md mt-4" onClick={handleSale}>Sale</button>
