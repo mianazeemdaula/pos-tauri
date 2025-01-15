@@ -36,6 +36,9 @@ export default async function Dashboard() {
             cashSale: cashSales._sum.total || 0,
         });
     }
+    const recrods = await fetch('http://127.0.0.1:3000/api/data');
+    const data = await recrods.json();
+    console.log(data);
 
     return (
         <div>

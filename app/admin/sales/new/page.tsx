@@ -214,23 +214,23 @@ export default function SalePage() {
                         ))}
                     </tbody>
                 </table >
-                <div className="bg-white w-64 p-4">
+                <div className="bg-white w-4/12 p-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm">Total </div>
-                        <div className="text-xl">{totalAmount}</div>
+                        <div className="text-xl">{totalAmount.toFixed(2)}</div>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="text-sm">Discount </div>
-                        <div className="text-xl">{totalDiscount}</div>
+                        <div className="text-xl">{totalDiscount.toFixed(2)}</div>
                     </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
                         <div className="text-sm font-bold">Net Total </div>
-                        <div className="text-xl font-bold">{totalAmount - totalDiscount}</div>
+                        <div className="text-xl font-bold">{(totalAmount - totalDiscount).toFixed(2)}</div>
                     </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
-                        <div className="text-sm">Qty </div>
+                        <div className="text-sm">Quantity </div>
                         <div className="text-xl">{totalQty}</div>
                     </div>
                     <div className="flex items-center justify-between">

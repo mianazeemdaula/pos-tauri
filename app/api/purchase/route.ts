@@ -76,7 +76,15 @@ export async function POST(req: NextRequest) {
                 if (product) {
                     await prisma.product.update({
                         where: { id: product.id },
-                        data: { stock: product.stock + Number(item.qty) },
+                        data: { stock: product.stock + Number(item.qty), price: item.price },
+                    });
+                    // update price history
+                    await prisma.priceHistory.create({
+                        data: {
+                            productId: product.id,
+                            price: item.price,
+                            effective_date: new Date(data.purchaseDate),
+                        },
                     });
                 }
             });

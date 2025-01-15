@@ -8,3 +8,15 @@ export interface SaleItem {
     discountPercent: number;
     total: number;
 }
+
+
+export interface PurchaseItem {
+    id: Number;
+    code: string;
+    name: string;
+    qty: number;
+    price: number;
+    discount: number;
+    discountPercent: number;
+    total: number;
+}

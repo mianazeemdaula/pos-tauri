@@ -8,17 +8,10 @@ import Label from "@/components/ui/label";
 import SearchProductModal from "@/components/dialogs/serach_products";
 import hotkeys from "hotkeys-js";
 import Select from "@/components/ui/select";
+import CartItemEditModal from "@/components/dialogs/cartitem_edit";
+import { PurchaseItem } from "@/lib/datatypes";
+import PurchaseItemEditModal from "@/components/dialogs/purchaseitem_edit";
 
-interface PurchaseItem {
-    id: Number;
-    code: string;
-    name: string;
-    qty: number;
-    price: number;
-    discount: number;
-    discountPercent: number;
-    total: number;
-}
 
 export default function SalePage() {
 
@@ -28,6 +21,8 @@ export default function SalePage() {
     const [productList, setProductList] = useState<Product[]>([]);
     const [itemList, setItemList] = useState<PurchaseItem[]>([])
     const [searchOpen, setSearchOpen] = useState<boolean>(false)
+    const [cartItemEditOpen, setCartItemEditOpen] = useState<boolean>(false)
+    const [selectedItem, setSelectedItem] = useState<PurchaseItem | null>(null)
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -122,6 +117,27 @@ export default function SalePage() {
         setItemList((prevItems) => prevItems.filter((item) => item.id !== id));
     }
 
+    function openEditModal(item: PurchaseItem) {
+        setSelectedItem(item);
+        setCartItemEditOpen(true);
+    }
+
+    function closeEditModal(item: any) {
+        if (item) {
+            const qty = item.qty;
+            const discount = ((item.price * item.discount) / 100) * qty;
+            const total = (qty * item.price) - (discount);
+            setItemList((prevItems) =>
+                prevItems.map((i) =>
+                    i.id === item.id
+                        ? { ...i, qty: qty, total: total, discount: discount, discountPercent: item.discount, price: item.price }
+                        : i
+                )
+            );
+        }
+        setCartItemEditOpen(false);
+    }
+
     async function handlePurchase() {
         try {
             const res = await fetch('/api/purchase', {
@@ -208,7 +224,7 @@ export default function SalePage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
                         {itemList.map((item) => (
-                            <tr key={item.code}>
+                            <tr key={item.code} onDoubleClick={() => { openEditModal(item) }}>
                                 <td className="p-2">{item.code}</td>
                                 <td className="p-2">{item.name}</td>
                                 <td className="p-2">{item.price}</td>
@@ -252,6 +268,8 @@ export default function SalePage() {
                     addToCard(e.id);
                 }
             }} />
+
+            <PurchaseItemEditModal isOpen={cartItemEditOpen} onClose={closeEditModal} initialData={selectedItem} />
         </>
     )
 }
