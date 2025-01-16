@@ -1,4 +1,4 @@
-import { SaleAgent, SaleAgentCommission } from "@prisma/client";
+import { SaleAgent, SaleAgentLedger } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { useEffect } from "react";
 interface SaleAgentComissionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    initialData: SaleAgentCommission | null;
+    initialData: SaleAgentLedger | null;
 }
 
 const formSchema = z.object({
@@ -34,9 +34,9 @@ export default function SaleAgentModal({ isOpen, onClose, initialData }: SaleAge
     useEffect(() => {
         if (initialData) {
             setValue('saleAgentId', initialData.saleAgentId);
-            setValue('referece', initialData.referece);
-            setValue('salemamount', initialData.salemamount);
-            setValue('commission', initialData.commission);
+            setValue('referece', initialData.note);
+            setValue('salemamount', initialData.openBalance);
+            setValue('commission', initialData.balance);
         } else {
             reset();
         }

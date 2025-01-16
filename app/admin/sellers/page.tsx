@@ -1,14 +1,14 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Seller } from "@prisma/client";
+import { Party } from "@prisma/client";
 import { FilePenLine, Plus } from "lucide-react";
 import SellerModal from "@/components/dialogs/seller";
 import Pagination from "@/components/ui/pagination";
 
 export default function SellerPage() {
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
-    const [sellerList, setSellerList] = useState<Seller[]>([]);
+    const [selectedSeller, setSelectedSeller] = useState<Party | null>(null);
+    const [sellerList, setSellerList] = useState<Party[]>([]);
 
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -28,7 +28,7 @@ export default function SellerPage() {
         getSellers();
     }, [page, search]);
 
-    const handleOpenModal = (item: Seller | null = null) => {
+    const handleOpenModal = (item: Party | null = null) => {
         setSelectedSeller(item);
         setModalOpen(true);
     };

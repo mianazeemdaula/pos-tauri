@@ -1,4 +1,4 @@
-import { Seller } from "@prisma/client";
+import { Party } from "@prisma/client";
 import { set, z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { useEffect } from "react";
 interface SellerModalProps {
     isOpen: boolean;
     onClose: () => void;
-    initialData: Seller | null;
+    initialData: Party | null;
 }
 
 const formSchema = z.object({

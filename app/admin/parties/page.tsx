@@ -68,7 +68,7 @@ export default function PartiesPage() {
                             <td>{customer.name}</td>
                             <td>{customer.city}</td>
                             <td>{customer.address}</td>
-                            <td>RS. {customer.ledgers[0]?.balance ?? 0}</td>
+                            <td>RS. {(customer.ledgers[0]?.balance ?? 0).toFixed(2)}</td>
                             <td className="text-center flex space-x-2 items-center justify-center">
                                 <button onClick={() => handleOpenModal(customer)} >
                                     <FilePenLine className="h-5 w-5" />

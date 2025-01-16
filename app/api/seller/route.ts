@@ -12,14 +12,19 @@ export async function GET(req: NextRequest) {
         const search = url.searchParams.get('s') || '';
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.seller.findMany({
+        const rows = await db.party.findMany({
             skip,
             take,
             orderBy: {
                 createdAt: 'desc',
             },
             include: {
-                wallet: true,
+                ledgers: {
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                    take: 1,
+                },
             },
             where: {
                 OR: [
@@ -46,7 +51,7 @@ export async function GET(req: NextRequest) {
                 ],
             },
         });
-        const total = await db.seller.count({});
+        const total = await db.party.count({});
         const totalPages = Math.ceil(total / take);
         return Response.json({
             rows,
@@ -63,7 +68,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: Request) {
     try {
         const data = await req.json();
-        const seller = await db.seller.update({
+        const seller = await db.party.update({
             where: {
                 id: data.id
             },
@@ -79,7 +84,7 @@ export async function POST(request: Request) {
     try {
         const data = await request.json();
         console.log(data);
-        const seller = await db.seller.create({
+        const seller = await db.party.create({
             data: data,
         });
         return Response.json(seller);

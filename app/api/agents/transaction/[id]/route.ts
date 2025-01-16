@@ -5,7 +5,7 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;
+        const id = (await params).id;
         const url = new URL(req.url);
         const page = Number(url.searchParams.get('page')) || 1;
         const pageSize = Number(url.searchParams.get('pageSize')) || 10;
