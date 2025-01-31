@@ -33,11 +33,8 @@ const parties: Prisma.PartyCreateInput[] = [
 
 const paymentTypes: Prisma.PaymentTypeCreateInput[] = [
     { name: 'Cash', },
-    { name: 'Credit', },
-    { name: 'Cheque', },
-    { name: 'Bank Transfer' },
-    { name: 'Online', },
-    { name: 'Other' },
+    { name: 'Meezan Bank' },
+    { name: 'Jazz Cash' },
 ];
 
 const prodcuts: Prisma.ProductCreateInput[] = [

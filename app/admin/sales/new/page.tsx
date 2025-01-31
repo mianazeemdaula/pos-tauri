@@ -23,6 +23,7 @@ export default function SalePage() {
     const [cartItemEditOpen, setCartItemEditOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<SaleItem | null>(null);
     const [changeAmount, setChangeAmount] = useState<number>(0);
+    const [cashamount, setCashAmount] = useState<number>(0);
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -107,6 +108,7 @@ export default function SalePage() {
                     qty: totalQty,
                     partyId: selectParty?.id,
                     paymentTypeId: paymentType,
+                    cash: cashamount,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -249,6 +251,7 @@ export default function SalePage() {
                     <div>
                         <Label htmlFor="cashamount">Cash Amount</Label>
                         <Input type="number" id="cashamount" name="cashamount" onChange={(e) => {
+                            setCashAmount(Number(e.target.value));
                             setChangeAmount(Number(e.target.value) - (totalAmount - totalDiscount))
                         }} />
                     </div>

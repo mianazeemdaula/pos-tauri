@@ -40,12 +40,32 @@ export default async function Dashboard() {
     const data = await recrods.json();
     console.log(data);
 
+    const balances = await db.paymentType.findMany({
+        include: {
+            Transaction: {
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                take: 1,
+            },
+        },
+    });
+
     return (
         <div>
             <h1>Dashboard</h1>
             <p>Welcome {session?.user?.name}</p>
             <div className=''>
                 <DailySaleChart data={salesData} />
+            </div>
+
+            <div>
+                {balances.map((balance) => (
+                    <div key={balance.id}>
+                        <h2>{balance.name}</h2>
+                        <p>{balance.Transaction[0]?.balance ?? 0}</p>
+                    </div>
+                ))}
             </div>
         </div>
     );

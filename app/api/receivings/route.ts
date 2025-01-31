@@ -79,9 +79,23 @@ export async function POST(req: NextRequest) {
                 data: {
                     partyId,
                     reference: data.note,
+                    credit: total,
+                    balance: ledger ? ledger.balance + total : total,
+                },
+            });
+
+            const tbalance = await prisma.transaction.findFirst({
+                where: { paymentTypeId: data.paymentTypeId },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            });
+            await prisma.transaction.create({
+                data: {
+                    paymentTypeId: data.paymentTypeId,
+                    note: data.note,
                     debit: total,
-                    credit: 0,
-                    balance: ledger ? ledger.balance - total : -total,
+                    balance: tbalance ? tbalance.balance + total : total,
                 },
             });
         });

@@ -43,11 +43,11 @@ export async function POST(req: NextRequest) {
         const userId = session?.user?.id || '';
         const partyId = Number(data.partyId);
         const total = Number(data.total);
-        console.log(data);
+        const payable = total - Number(data.discount);
         await db.$transaction(async (prisma) => {
             const purchase = await prisma.purchase.create({
                 data: {
-                    total,
+                    total: payable,
                     discount: data.discount,
                     partyId: partyId,
                     userId: Number(userId),
@@ -102,9 +102,24 @@ export async function POST(req: NextRequest) {
                 data: {
                     partyId,
                     reference: `Purchase of #[${purchase.id}]`,
-                    debit: total,
-                    credit: 0,
-                    balance: wallet ? wallet.balance - total : -total,
+                    credit: payable,
+                    balance: wallet ? wallet.balance + payable : payable,
+                },
+            });
+
+            const tbalance = await prisma.transaction.findFirst({
+                where: { paymentTypeId: 1 },
+                orderBy: {
+                    createdAt: 'desc',
+                },
+            });
+            await prisma.transaction.create({
+                data: {
+                    paymentTypeId: 1,
+                    balance: tbalance ? tbalance.balance - payable : -payable,
+                    note: `Purchase of #[${purchase.id}]`,
+                    credit: payable,
+                    openBalance: tbalance ? tbalance.balance : 0,
                 },
             });
         });

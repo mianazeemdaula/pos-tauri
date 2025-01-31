@@ -27,7 +27,7 @@ export function AdminSidebar() {
     ];
 
     return (
-        <div className="flex flex-col space-y-1 p-4 w-64 border-r">
+        <div className="flex flex-col space-y-1 p-4 w-64 border-r print:hidden">
             {sidebarLinks.map((link) => {
                 const Icon = link.icon;
                 return (

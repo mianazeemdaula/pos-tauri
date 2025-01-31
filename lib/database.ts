@@ -35,6 +35,15 @@ export async function customers() {
     return rows;
 }
 
+export async function getPartyById(id: number) {
+    const row = await db.party.findUnique({
+        where: {
+            id: id
+        }
+    });
+    return row;
+}
+
 export async function parties() {
     const rows = await db.party.findMany({});
     return rows;

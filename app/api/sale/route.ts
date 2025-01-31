@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
         const userId = Number(session?.user?.id);
         const partyId = data.partyId;
         const totalNetAmount = Number(data.total) - Number(data.discount);
+        const cash = Number(data.cash);
         await db.$transaction(async (prisma) => {
             const sale = await prisma.sale.create({
                 data: {
@@ -79,20 +80,41 @@ export async function POST(req: NextRequest) {
             });
 
             await Promise.all(productUpdates);
-            if (partyId) {
-                let balance = await prisma.ledger.findFirst({
-                    where: { partyId },
+            // update cash balance if cash is paid by customer
+            if (cash >= 0) {
+                let amount = totalNetAmount - cash;
+                amount = amount > 0 ? cash : totalNetAmount;
+                const tbalance = await prisma.transaction.findFirst({
+                    where: { paymentTypeId: data.paymentTypeId },
                     orderBy: { createdAt: 'desc' },
                 });
-                await prisma.ledger.create({
+                await prisma.transaction.create({
                     data: {
-                        openBalance: balance?.balance || 0.00,
-                        debit: totalNetAmount,
-                        balance: balance?.balance ? Number(balance.balance) - totalNetAmount : -totalNetAmount,
-                        reference: `Sale of #[${sale.id}]`,
-                        partyId,
+                        openBalance: tbalance?.balance || 0.00,
+                        paymentTypeId: data.paymentTypeId,
+                        debit: amount,
+                        balance: tbalance?.balance ? Number(tbalance.balance) + amount : amount,
+                        note: `Sale of #[${sale.id}]`,
                     },
                 });
+
+                if (partyId) {
+                    let balance = await prisma.ledger.findFirst({
+                        where: { partyId },
+                        orderBy: { createdAt: 'desc' },
+                    });
+                    let payable = totalNetAmount - cash;
+                    payable = payable < 0 ? totalNetAmount : payable;
+                    await prisma.ledger.create({
+                        data: {
+                            openBalance: balance?.balance || 0.00,
+                            debit: payable,
+                            balance: balance?.balance ? Number(balance.balance) - payable : -payable,
+                            reference: `Sale of #[${sale.id}]`,
+                            partyId,
+                        },
+                    });
+                }
             }
         });
         return NextResponse.json({ message: 'success' });

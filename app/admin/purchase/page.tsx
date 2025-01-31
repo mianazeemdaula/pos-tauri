@@ -202,7 +202,7 @@ export default function SalePage() {
             </div>
 
             <div className="flex items-center justify-between space-x-4">
-                <input type="text" name="" id="" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} />
+                <input type="text" name="" id="" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} placeholder="Enter SKU or F2" />
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => setSearchOpen(true)}
@@ -241,22 +241,29 @@ export default function SalePage() {
                     </tbody>
                 </table >
                 <div className="bg-white w-64 p-4">
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Total </div>
-                        <div className="text-xl">{totalAmount}</div>
+                        <div className="text-xl">{totalAmount.toFixed(2)}</div>
                     </div>
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Discount </div>
-                        <div className="text-xl">{totalDiscount}</div>
+                        <div className="text-xl">{totalDiscount.toFixed(2)}</div>
                     </div>
-                    <div>
-                        <div className="text-sm">Qty </div>
+                    <hr className="my-1 border-dotted" />
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold">Net Total </div>
+                        <div className="text-xl font-bold">{(totalAmount - totalDiscount).toFixed(2)}</div>
+                    </div>
+                    <hr className="my-1 border-dotted" />
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm">Quantity </div>
                         <div className="text-xl">{totalQty}</div>
                     </div>
-                    <div>
+                    <div className="flex items-center justify-between">
                         <div className="text-sm">Items Count </div>
                         <div className="text-xl">{itemList.length}</div>
                     </div>
+                    <hr className="my-4 border-dotted" />
                     <div>
                         <button className="bg-secondary text-white px-4 py-2 rounded-md mt-4 w-full" onClick={handlePurchase}>Purchase</button>
                     </div>

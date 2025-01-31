@@ -8,6 +8,10 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'print': { 'raw': 'print' },
+        'screen': { 'raw': 'screen' },
+      },
       colors: {
         background: "rgb(114, 186, 169)",
         foreground: "rgb(213, 231, 181)",
