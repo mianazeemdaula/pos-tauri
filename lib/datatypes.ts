@@ -6,6 +6,7 @@ export interface SaleItem {
     price: number;
     discount: number;
     discountPercent: number;
+    tax: number;
     total: number;
 }
 

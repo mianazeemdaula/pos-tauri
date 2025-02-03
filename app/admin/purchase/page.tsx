@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { products, parties } from "@/lib/database";
-import { Product, Party } from "@prisma/client";
+import { Product, Party, PaymentType } from "@prisma/client";
 import { CircleX, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import Label from "@/components/ui/label";
@@ -11,6 +11,7 @@ import Select from "@/components/ui/select";
 import CartItemEditModal from "@/components/dialogs/cartitem_edit";
 import { PurchaseItem } from "@/lib/datatypes";
 import PurchaseItemEditModal from "@/components/dialogs/purchaseitem_edit";
+import { Input } from "@/components/ui/input";
 
 
 export default function SalePage() {
@@ -23,6 +24,9 @@ export default function SalePage() {
     const [searchOpen, setSearchOpen] = useState<boolean>(false)
     const [cartItemEditOpen, setCartItemEditOpen] = useState<boolean>(false)
     const [selectedItem, setSelectedItem] = useState<PurchaseItem | null>(null)
+    const [paymentTypesList, setPaymentTypes] = useState<PaymentType[]>([])
+    const [paymentType, setPaymentType] = useState<number>(1);
+    const [cashamount, setCashAmount] = useState<number>(0);
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -44,6 +48,18 @@ export default function SalePage() {
             hotkeys.unbind("f2");
         };
     }, [searchOpen]);
+
+    useEffect(() => {
+        async function getPaymentTypes() {
+            const p = await fetch('/api/payment_types');
+            const data = await p.json();
+            setPaymentTypes(data);
+        }
+        getPaymentTypes();
+        return () => {
+            setPaymentTypes([]);
+        }
+    }, []);
 
     async function getSellers() {
         const p = await parties();
@@ -150,6 +166,8 @@ export default function SalePage() {
                     partyId: selectedSellerId,
                     purchaseDate: new Date(),
                     invoiceDate: new Date(),
+                    paymentTypeId: paymentType,
+                    cash: cashamount,
                     invoiceNo: Math.floor(Math.random() * 1000000),
                 }),
                 headers: {
@@ -264,6 +282,20 @@ export default function SalePage() {
                         <div className="text-xl">{itemList.length}</div>
                     </div>
                     <hr className="my-4 border-dotted" />
+                    <div>
+                        <Label htmlFor="payment_type">Payment Type</Label>
+                        <Select name="payment_type" id="payment_type" options={[]} onChange={(e) => setPaymentType(Number(e.target.value))}>
+                            {paymentTypesList.map((type) => (
+                                <option key={type.id} value={type.id}>{type.name}</option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="cashamount">Cash Amount</Label>
+                        <Input type="number" id="cashamount" name="cashamount" onChange={(e) => {
+                            setCashAmount(Number(e.target.value));
+                        }} />
+                    </div>
                     <div>
                         <button className="bg-secondary text-white px-4 py-2 rounded-md mt-4 w-full" onClick={handlePurchase}>Purchase</button>
                     </div>

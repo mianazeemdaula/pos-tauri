@@ -23,6 +23,7 @@ const formSchema = z.object({
     price: z.number().min(1),
     discount: z.number().min(0).max(100),
     stock: z.number().min(0),
+    tax: z.number().min(0).max(100),
     lowStockAlert: z.number().min(0),
 });
 
@@ -54,6 +55,7 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
         if (initialData) {
             setValue('name', initialData.name);
             setValue('code', initialData.code);
+            setValue('tax', initialData.tax);
             setValue('categoryId', initialData.categoryId);
             setValue('brandId', initialData.brandId);
             setValue('nameUr', initialData.nameUr);
@@ -138,7 +140,7 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                         </div>
                         <div className="">
                             <label className="block mb-2 font-medium">Discount</label>
-                            <Input {...register('discount', { valueAsNumber: true })} type="number" placeholder="Enter discount" />
+                            <Input {...register('discount', { valueAsNumber: true })} type="number" step={0.01} placeholder="Enter discount" />
                             {errors.discount && <p className="text-sm text-red-500 mt-1">{errors.discount.message?.toString()}</p>}
                         </div>
                         <div className="">
@@ -150,6 +152,11 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                             <label className="block mb-2 font-medium">Low Stock Alert</label>
                             <Input {...register('lowStockAlert', { valueAsNumber: true })} type="number" placeholder="Enter low stock alert" />
                             {errors.lowStockAlert && <p className="text-sm text-red-500 mt-1">{errors.lowStockAlert.message?.toString()}</p>}
+                        </div>
+                        <div className="">
+                            <label className="block mb-2 font-medium">Tax(%)</label>
+                            <Input {...register('tax', { valueAsNumber: true })} type="number" step={0.01} placeholder="Enter tax %" />
+                            {errors.tax && <p className="text-sm text-red-500 mt-1">{errors.tax.message?.toString()}</p>}
                         </div>
                     </div>
                     <div className="flex justify-end mt-4">

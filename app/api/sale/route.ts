@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         const session = await auth();
         const userId = Number(session?.user?.id);
         const partyId = data.partyId;
-        const totalNetAmount = Number(data.total) - Number(data.discount);
+        const totalNetAmount = (Number(data.total) - Number(data.discount)) + Number(data.tax);
         const cash = Number(data.cash);
         await db.$transaction(async (prisma) => {
             const sale = await prisma.sale.create({
@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
                     userId,
                     paymentTypeId: data.paymentTypeId, // or any appropriate value
                     discount: data.discount,
+                    discount2: data.discount2,
+                    tax: data.tax,
                 },
             });
 
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
                 productId: item.id,
                 quantity: Number(item.qty),
                 discount: item.discount,
+                tax: (item.tax * item.qty * item.price) / 100,
                 price: item.price,
             }));
 
@@ -98,7 +101,7 @@ export async function POST(req: NextRequest) {
                     },
                 });
 
-                if (partyId) {
+                if (partyId && totalNetAmount > cash) {
                     let balance = await prisma.ledger.findFirst({
                         where: { partyId },
                         orderBy: { createdAt: 'desc' },

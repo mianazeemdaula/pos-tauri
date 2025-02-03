@@ -108,14 +108,14 @@ export async function POST(req: NextRequest) {
             });
 
             const tbalance = await prisma.transaction.findFirst({
-                where: { paymentTypeId: 1 },
+                where: { paymentTypeId: data.paymentTypeId },
                 orderBy: {
                     createdAt: 'desc',
                 },
             });
             await prisma.transaction.create({
                 data: {
-                    paymentTypeId: 1,
+                    paymentTypeId: data.paymentTypeId,
                     balance: tbalance ? tbalance.balance - payable : -payable,
                     note: `Purchase of #[${purchase.id}]`,
                     credit: payable,

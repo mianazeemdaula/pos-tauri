@@ -1,4 +1,5 @@
 import DailySaleChart from '@/components/charts/daily_sale_chart';
+import PaymentTypeChart from '@/components/charts/paymenttypes_chart';
 import { auth } from '@/lib/auth';
 import { db } from '@/prisma/db';
 export default async function Dashboard() {
@@ -36,9 +37,6 @@ export default async function Dashboard() {
             cashSale: cashSales._sum.total || 0,
         });
     }
-    const recrods = await fetch('http://127.0.0.1:3000/api/data');
-    const data = await recrods.json();
-    console.log(data);
 
     const balances = await db.paymentType.findMany({
         include: {
@@ -50,6 +48,11 @@ export default async function Dashboard() {
             },
         },
     });
+    const pidata = balances.map((balance) => ({
+        name: balance.name,
+        value: balance.Transaction[0]?.balance ?? 0,
+    }));
+
 
     return (
         <div>
@@ -58,14 +61,9 @@ export default async function Dashboard() {
             <div className=''>
                 <DailySaleChart data={salesData} />
             </div>
-
             <div>
-                {balances.map((balance) => (
-                    <div key={balance.id}>
-                        <h2>{balance.name}</h2>
-                        <p>{balance.Transaction[0]?.balance ?? 0}</p>
-                    </div>
-                ))}
+                <h2>Balance</h2>
+                <PaymentTypeChart data={pidata} />
             </div>
         </div>
     );

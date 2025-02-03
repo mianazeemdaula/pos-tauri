@@ -107,6 +107,7 @@ model Product {
   price         Float
   discount      Float
   stock         Int              @default(0)
+  tax           Float            @default(0)
   image         String?
   category      Category         @relation(fields: [categoryId], references: [id])
   categoryId    Int
@@ -155,6 +156,8 @@ model Sale {
   paymentTypeId Int
   total         Float
   discount      Float
+  discount2     Float        @default(0)
+  tax           Float        @default(0)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   items         SaleDetail[]
@@ -168,6 +171,7 @@ model SaleDetail {
   productId Int
   quantity  Int      @default(1)
   price     Float
+  tax       Float    @default(0)
   discount  Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +185,8 @@ model Purchase {
   userId         Int
   total          Float
   discount       Float
+  discount2      Float            @default(0)
+  tax            Float            @default(0)
   purchseDate    DateTime
   invoiceNo      String
   invoiceDate    DateTime
@@ -197,6 +203,7 @@ model PurchaseDetail {
   productId  Int
   quantity   Int      @default(1)
   price      Float
+  tax        Float    @default(0)
   discount   Float    @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

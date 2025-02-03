@@ -28,6 +28,7 @@ export default function SalePage() {
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
     const totalDiscount = itemList.reduce((sum, item) => sum + item.discount, 0);
+    const totalTax = itemList.reduce((sum, item) => sum + item.tax, 0);
 
 
     useEffect(() => {
@@ -90,6 +91,7 @@ export default function SalePage() {
                     qty: 1,
                     price: product.price,
                     discount: discount,
+                    tax: product.tax * product.price / 100,
                     discountPercent: product.discount,
                     total: product.price - discount,
                 }
@@ -109,6 +111,7 @@ export default function SalePage() {
                     partyId: selectParty?.id,
                     paymentTypeId: paymentType,
                     cash: cashamount,
+                    tax: totalTax,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -198,7 +201,7 @@ export default function SalePage() {
                             <td className="w-1/4 text-center">Action</td>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 text-sm bg-white">
+                    <tbody className="divide-y divide-gray-200 text-xs bg-white">
                         {itemList.map((sale) => (
                             <tr key={sale.id} onDoubleClick={() => { openEditModal(sale) }}>
                                 <td className="p-2">{sale.sku}</td>
@@ -225,10 +228,14 @@ export default function SalePage() {
                         <div className="text-sm">Discount </div>
                         <div className="text-xl">{totalDiscount.toFixed(2)}</div>
                     </div>
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm">Tax </div>
+                        <div className="text-xl">{totalTax.toFixed(2)}</div>
+                    </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
                         <div className="text-sm font-bold">Net Total </div>
-                        <div className="text-xl font-bold">{(totalAmount - totalDiscount).toFixed(2)}</div>
+                        <div className="text-xl font-bold">{((totalAmount - totalDiscount) + totalTax).toFixed(2)}</div>
                     </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
