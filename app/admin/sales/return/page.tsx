@@ -11,9 +11,10 @@ import SearchPartyModal from "@/components/dialogs/serach_party";
 import Select from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
-export default function SalePage() {
+export default function ReturnSalePage() {
 
     const [selectParty, setSelectedParty] = useState<Party | null>(null);
+    const [saleId, setSaleId] = useState<number>(0);
     const [itemList, setItemList] = useState<SaleItem[]>([])
     const [paymentTypesList, setPaymentTypes] = useState<PaymentType[]>([])
     const [paymentType, setPaymentType] = useState<number>(1);
@@ -23,7 +24,6 @@ export default function SalePage() {
     const [selectedItem, setSelectedItem] = useState<SaleItem | null>(null);
     const [changeAmount, setChangeAmount] = useState<number>(0);
     const [cashamount, setCashAmount] = useState<number>(0);
-    const [discount2, setDiscount2] = useState<number>(0);
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -42,6 +42,51 @@ export default function SalePage() {
             setPaymentTypes([]);
         }
     }, []);
+
+    async function findSale(event: any) {
+        if (event.key !== 'Enter') {
+            return null;
+        }
+        const id = event.target.value;
+        const sale = await fetch('/api/sale/find?id=' + id);
+        if (!sale.ok) {
+            toast.error('Sale not found');
+            return null;
+        }
+        const data = await sale.json();
+        setSaleId(id);
+        for (const item of data.items) {
+            // check if item already exists in the list
+            const cartItem = itemList.find((i) => i.id == item.productId);
+            if (cartItem) {
+                const qty = cartItem.qty + item.quantity;
+                const discount = ((cartItem.price * cartItem.discountPercent) / 100) * qty;
+                const total = (qty * cartItem.price) - (discount);
+                setItemList((prevItems) =>
+                    prevItems.map((i) =>
+                        i.id === item.productId
+                            ? { ...i, qty: qty, total: total, discount: discount }
+                            : i
+                    )
+                );
+            } else {
+                setItemList((p) => [
+                    ...p,
+                    {
+                        id: item.productId,
+                        sku: item.product.code,
+                        name: item.product.name,
+                        qty: item.quantity,
+                        price: item.price,
+                        discount: item.discount,
+                        tax: item.tax,
+                        discountPercent: item.discount / (item.quantity * item.price) * 100,
+                        total: item.quantity * item.price - item.discount,
+                    }
+                ])
+            }
+        }
+    }
 
     async function findProduct(sku: string) {
         const product = await fetch('/api/product/' + sku);
@@ -101,25 +146,25 @@ export default function SalePage() {
 
     async function handleSale() {
         try {
-            const res = await fetch('/api/sale', {
+            const res = await fetch('/api/sale/return', {
                 method: 'POST',
                 body: JSON.stringify({
                     items: itemList,
                     total: totalAmount,
                     discount: totalDiscount,
-                    discount2: discount2,
+                    discount2: 0,
                     qty: totalQty,
-                    partyId: selectParty?.id,
                     paymentTypeId: paymentType,
                     cash: cashamount,
                     tax: totalTax,
+                    saleId: saleId,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
             if (!res.ok) {
-                throw new Error(res.statusText);
+                throw new Error(await res.text());
             }
             const data = await res.json();
             // const salePrintRes = await fetch("http://127.0.0.1:5000/print", {
@@ -134,7 +179,7 @@ export default function SalePage() {
             //     console.log(await salePrintRes.json());
             //     throw new Error(salePrintRes.statusText);
             // }
-            toast.success('Sale completed');
+            toast.success('Sale return completed');
             window.location.reload();
         } catch (error) {
             toast.error('Error: ' + (error as Error).message);
@@ -166,34 +211,14 @@ export default function SalePage() {
 
     return (
         <>
-            <div className="flex items-center justify-between space-x-4 my-2">
-                <div>
-                    <div className="flex items-center gap-x-2">
-                        <button onClick={() => setPartySearchOpen(!partySearchOpen)} className="bg-gray-100 text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary transition-colors hover:text-white">Search Party</button>
-                        {selectParty &&
-                            <div>
-                                <div className="text-sm">{selectParty?.name}</div>
-                                <div className="text-sm">{selectParty?.phone}</div>
-                            </div>
-                        }
-                    </div>
-
-                </div>
-
-                <div>
-                    <button
-                        className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
-                        onClick={() => {
-                            // reload the page
-                            window.location.reload();
-                        }}
-                    ><Plus className="h-5 w-5" /> New Sale
-                    </button>
+            <div>
+                <Label htmlFor="party">Party</Label>
+                <div className="flex items-center justify-between">
+                    <input type="text" className="w-full px-3 py-2 rounded-md" onKeyDown={findSale} />
                 </div>
             </div>
-
             <div className="flex items-center justify-between space-x-4">
-                <input type="text" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} placeholder="SKU or scan barcode" />
+                <input type="text" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} placeholder="Enter Sale ID or scan barcode" />
                 <button
                     className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
                     onClick={() => { setSearchOpen(!searchOpen) }}
@@ -243,17 +268,13 @@ export default function SalePage() {
                         <div className="text-xl">{totalDiscount.toFixed(2)}</div>
                     </div>
                     <div className="flex items-center justify-between">
-                        <div className="text-sm">Discount2 </div>
-                        <div className="text-xl">{discount2.toFixed(2)}</div>
-                    </div>
-                    <div className="flex items-center justify-between">
                         <div className="text-sm">Tax </div>
                         <div className="text-xl">{totalTax.toFixed(2)}</div>
                     </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
                         <div className="text-sm font-bold">Net Total </div>
-                        <div className="text-xl font-bold">{((totalAmount - totalDiscount - discount2) + totalTax).toFixed(2)}</div>
+                        <div className="text-xl font-bold">{((totalAmount - totalDiscount) + totalTax).toFixed(2)}</div>
                     </div>
                     <hr className="my-1 border-dotted" />
                     <div className="flex items-center justify-between">
@@ -274,16 +295,10 @@ export default function SalePage() {
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="discount2">Discount</Label>
-                        <Input type="number" id="discount2" name="discount2" onChange={(e) => {
-                            setDiscount2(Number(e.target.value));
-                        }} />
-                    </div>
-                    <div>
                         <Label htmlFor="cashamount">Cash Amount</Label>
                         <Input type="number" id="cashamount" name="cashamount" onChange={(e) => {
                             setCashAmount(Number(e.target.value));
-                            setChangeAmount(Number(e.target.value) - (totalAmount - totalDiscount - discount2 + totalTax));
+                            setChangeAmount(Number(e.target.value) - (totalAmount - totalDiscount))
                         }} />
                     </div>
                     <div>

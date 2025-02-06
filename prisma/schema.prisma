@@ -21,10 +21,11 @@ model User {
   // Optional for WebAuthn support
   Authenticator Authenticator[]
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  sales     Sale[]
-  purchases Purchase[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  sales      Sale[]
+  purchases  Purchase[]
+  SaleReturn SaleReturn[]
 }
 
 model Account {
@@ -100,40 +101,42 @@ model Brand {
 }
 
 model Product {
-  id            Int              @id @default(autoincrement())
-  name          String
-  nameUr        String?
-  code          String           @unique
-  price         Float
-  discount      Float
-  stock         Int              @default(0)
-  tax           Float            @default(0)
-  image         String?
-  category      Category         @relation(fields: [categoryId], references: [id])
-  categoryId    Int
-  lowStockAlert Int              @default(0)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  saleItems     SaleDetail[]
-  purchaseItems PurchaseDetail[]
-  brand         Brand?           @relation(fields: [brandId], references: [id])
-  brandId       Int?
-  PriceHistory  PriceHistory[]
+  id               Int                @id @default(autoincrement())
+  name             String
+  nameUr           String?
+  code             String             @unique
+  price            Float
+  discount         Float
+  stock            Int                @default(0)
+  tax              Float              @default(0)
+  image            String?
+  category         Category           @relation(fields: [categoryId], references: [id])
+  categoryId       Int
+  lowStockAlert    Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  saleItems        SaleDetail[]
+  purchaseItems    PurchaseDetail[]
+  brand            Brand?             @relation(fields: [brandId], references: [id])
+  brandId          Int?
+  PriceHistory     PriceHistory[]
+  SaleReturnDetail SaleReturnDetail[]
 }
 
 model Party {
-  id        Int        @id @default(autoincrement())
-  name      String
-  phone     String
-  whatsApp  String?
-  city      String
-  address   String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  sales     Sale[]
-  purchases Purchase[]
-  ledgers   Ledger[]
-  payments  Payment[]
+  id         Int          @id @default(autoincrement())
+  name       String
+  phone      String
+  whatsApp   String?
+  city       String
+  address    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  sales      Sale[]
+  purchases  Purchase[]
+  ledgers    Ledger[]
+  payments   Payment[]
+  SaleReturn SaleReturn[]
 }
 
 model PaymentType {
@@ -144,6 +147,7 @@ model PaymentType {
   sales       Sale[]
   Payment     Payment[]
   Transaction Transaction[]
+  SaleReturn  SaleReturn[]
 }
 
 model Sale {
@@ -287,4 +291,35 @@ model Transaction {
   balance       Float       @default(0)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model SaleReturn {
+  id            Int                @id @default(autoincrement())
+  user          User               @relation(fields: [userId], references: [id])
+  userId        Int
+  party         Party?             @relation(fields: [partyId], references: [id])
+  partyId       Int?
+  paymentType   PaymentType        @relation(fields: [paymentTypeId], references: [id])
+  paymentTypeId Int
+  total         Float
+  discount      Float
+  discount2     Float              @default(0)
+  tax           Float              @default(0)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  items         SaleReturnDetail[]
+}
+
+model SaleReturnDetail {
+  id        Int        @id @default(autoincrement())
+  sale      SaleReturn @relation(fields: [saleId], references: [id])
+  saleId    Int
+  product   Product    @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int        @default(1)
+  price     Float
+  tax       Float      @default(0)
+  discount  Float      @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }

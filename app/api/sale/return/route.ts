@@ -10,7 +10,7 @@ export async function GET(req: Request) {
         const pageSize = Number(url.searchParams.get('pageSize')) || 10;
         const skip = (page - 1) * pageSize; // Calculate how many records to skip
         const take = pageSize;
-        const rows = await db.sale.findMany({
+        const rows = await db.saleReturn.findMany({
             skip,
             take,
             orderBy: {
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
                 },
             },
         });
-        const totalPosts = await db.sale.count({});
+        const totalPosts = await db.saleReturn.count({});
         const totalPages = Math.ceil(totalPosts / take);
         return Response.json({
             rows,
@@ -41,15 +41,17 @@ export async function POST(req: NextRequest) {
         const data = await req.json();
         const session = await auth();
         const userId = Number(session?.user?.id);
-        const partyId = data.partyId;
-        const totalNetAmount = (Number(data.total) + Number(data.tax) - Number(data.discount)) - Number(data.discount2);
+        const totalNetAmount = (Number(data.total) - Number(data.discount)) + Number(data.tax);
         const cash = Number(data.cash);
         await db.$transaction(async (prisma) => {
-            const sale = await prisma.sale.create({
+            const sale = await prisma.sale.findUnique({
+                where: { id: Number(data.saleId) },
+            });
+            const saleReturn = await prisma.saleReturn.create({
                 data: {
                     total: totalNetAmount,
-                    partyId: partyId ?? null,
                     userId,
+                    partyId: sale?.partyId,
                     paymentTypeId: data.paymentTypeId, // or any appropriate value
                     discount: data.discount,
                     discount2: data.discount2,
@@ -58,15 +60,15 @@ export async function POST(req: NextRequest) {
             });
 
             const orderDetails = data.items.map((item: any) => ({
-                saleId: sale.id,
+                saleId: saleReturn.id,
                 productId: item.id,
                 quantity: Number(item.qty),
                 discount: item.discount,
-                tax: (item.tax * item.qty * item.price) / 100,
+                tax: item.tax,
                 price: item.price,
             }));
 
-            await prisma.saleDetail.createMany({
+            await prisma.saleReturnDetail.createMany({
                 data: orderDetails,
             });
 
@@ -77,48 +79,50 @@ export async function POST(req: NextRequest) {
                 if (product) {
                     await prisma.product.update({
                         where: { id: product.id },
-                        data: { stock: product.stock - Number(item.qty) },
+                        data: { stock: product.stock + Number(item.qty) },
                     });
                 }
             });
 
             await Promise.all(productUpdates);
-
-            // update the Payment Type balance for Business
-            const tbalance = await prisma.transaction.findFirst({
-                where: { paymentTypeId: data.paymentTypeId },
-                orderBy: { createdAt: 'desc' },
-            });
-            await prisma.transaction.create({
-                data: {
-                    openBalance: tbalance?.balance || 0.00,
-                    paymentTypeId: data.paymentTypeId,
-                    debit: cash,
-                    balance: tbalance?.balance ? Number(tbalance.balance) + cash : cash,
-                    note: `Sale of #[${sale.id}]`,
-                },
-            });
-
-            // update the Ledger balance for Party
-            if (partyId && totalNetAmount > cash) {
-                let balance = await prisma.ledger.findFirst({
-                    where: { partyId },
+            // update cash balance if cash is paid by customer
+            if (cash >= 0) {
+                let amount = totalNetAmount - cash;
+                amount = amount > 0 ? cash : totalNetAmount;
+                const tbalance = await prisma.transaction.findFirst({
+                    where: { paymentTypeId: data.paymentTypeId },
                     orderBy: { createdAt: 'desc' },
                 });
-                let payable = totalNetAmount - cash;
-                payable = payable < 0 ? totalNetAmount : payable;
-                await prisma.ledger.create({
+                await prisma.transaction.create({
                     data: {
-                        openBalance: balance?.balance || 0.00,
-                        debit: payable,
-                        balance: balance?.balance ? Number(balance.balance) - payable : -payable,
-                        reference: `Sale of #[${sale.id}]`,
-                        partyId,
+                        openBalance: tbalance?.balance || 0.00,
+                        paymentTypeId: data.paymentTypeId,
+                        debit: amount,
+                        balance: tbalance?.balance ? Number(tbalance.balance) - amount : -amount,
+                        note: `Sale return of sale #[${saleReturn.id}]`,
                     },
                 });
+
+                if (totalNetAmount > cash && sale?.partyId) {
+                    let balance = await prisma.ledger.findFirst({
+                        where: { partyId: sale?.partyId },
+                        orderBy: { createdAt: 'desc' },
+                    });
+                    let payable = totalNetAmount - cash;
+                    payable = payable < 0 ? totalNetAmount : payable;
+                    await prisma.ledger.create({
+                        data: {
+                            openBalance: balance?.balance || 0.00,
+                            debit: payable,
+                            balance: balance?.balance ? Number(balance.balance) + payable : payable,
+                            reference: `Sale return of #[${saleReturn.id}]`,
+                            partyId: sale?.partyId,
+                        },
+                    });
+                }
             }
         });
-        const salePrint = await db.sale.findFirst({
+        const salePrint = await db.saleReturn.findFirst({
             where: { id: data.id },
             include: {
                 user: true,
@@ -130,10 +134,8 @@ export async function POST(req: NextRequest) {
                 },
             },
         });
-        console.log(salePrint);
         return NextResponse.json({ message: 'success', data: salePrint });
     } catch (error) {
-        console.log(error);
         return NextResponse.json({ message: error }, { status: 500 });
     }
 }

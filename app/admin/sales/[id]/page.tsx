@@ -1,31 +1,52 @@
-import { db } from "@/prisma/db";
+"use client";
 
-
-export default async function SaledViewPage(
+import { PrinterIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+export default function SaledViewPage(
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params;
-    const sale = await db.sale.findFirst({
-        where: {
-            id: Number(id),
-        },
-        include: {
-            party: true,
-            user: true,
-            items: {
-                include: {
-                    product: true,
-                },
-            },
-        },
-    });
-    if (!sale) {
-        return <div>Not Found</div>
+    const [sale, setSale] = useState<any>({});
+
+    useEffect(() => {
+        async function getSale() {
+            const p = await fetch(`/api/sale/find?id=${(await params).id}`);
+            const data = await p.json();
+            setSale(data);
+        }
+        getSale();
+    }, []);
+
+
+    const printSlip = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/print',
+                {
+                    method: 'POST',
+                    body: JSON.stringify(sale),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            )
+            const d = await res.json();
+            if (!res.ok) {
+                throw new Error(d.error);
+            }
+            toast.success('Slip printed successfully');
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error('An unknown error occurred');
+            }
+        }
     }
+
+    if (!sale.id) return <div>Loading...</div>;
+
     return (
         <div>
-            <h1>Sale View</h1>
-            <div>{id}</div>
             <div className="flex gap-4">
                 <div className="bg-white shadow-md rounded p-4 mb-4">
                     <h2 className="text-xl font-bold mb-2">Customer Details</h2>
@@ -46,28 +67,60 @@ export default async function SaledViewPage(
                 </div>
             </div>
             <div>
-                <h2>Order Details</h2>
+                <div className="flex justify-between items-center">
+                    <h2>Order Details</h2>
+                    <div className="">
+                        <button className="flex gap-x-2" onClick={printSlip} >
+                            <PrinterIcon className="h-5 w-5" />
+                            <div>Print</div>
+                        </button>
+                    </div>
+                </div>
                 <table className="table-fixed w-full mt-4 border-collapse">
                     <thead className="bg-gray-100 text-sm">
                         <tr>
-                            <th className="p-2">Product</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Discount</th>
-                            <th>Total</th>
+                            <th className="p-2 text-left">Product</th>
+                            <th className="text-left" >Quantity</th>
+                            <th className="text-left" >Price</th>
+                            <th className="text-left" >Discount</th>
+                            <th className="text-left" >Tax</th>
+                            <th className="text-left" >Total</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                        {sale.items.map((od) => (
+                        {sale.items.map((od: any) => (
                             <tr key={od.id}>
                                 <td className="p-2">{od.product.name}</td>
                                 <td>{od.quantity}</td>
                                 <td>{od.price}</td>
                                 <td>{od.discount}</td>
-                                <td>{od.price * od.quantity}</td>
+                                <td>{od.tax}</td>
+                                <td>{((od.price * od.quantity) + od.tax) - od.discount}</td>
                             </tr>
                         ))}
                     </tbody>
+                    <tfoot className="text-sm">
+                        <tr>
+                            <td colSpan={5} className="text-right p-2">Total</td>
+                            <td>RS {sale.total + sale.tax + sale.discount + sale.discount2}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={5} className="text-right p-2">Discount</td>
+                            <td>RS {sale.discount}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={5} className="text-right p-2">Discount2</td>
+                            <td>RS {sale.discount2}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={5} className="text-right p-2">Tax</td>
+                            <td>RS {sale.tax}</td>
+                        </tr>
+                        <tr>
+                            <td colSpan={5} className="text-right p-2">Net Total</td>
+                            <td>RS {sale.total}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

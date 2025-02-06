@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { Sale } from "@prisma/client";
-import { Eye, FilePenLine, Plus } from "lucide-react";
+import { Eye, FilePenLine, Plus, Undo2 } from "lucide-react";
 import Link from "next/link";
 import Pagination from "@/components/ui/pagination";
 import { formatDate } from "@/lib/funtions";
@@ -34,10 +34,16 @@ export default function SalesPage() {
         <>
             <div className="flex justify-between items-center">
                 <h1>Sales</h1>
-                <Link href={"/admin/sales/new"}
-                    className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
-                ><Plus className="h-5 w-5" /> New Sale
-                </Link>
+                <div className="flex gap-x-2">
+                    <Link href={"/admin/sales/new"}
+                        className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
+                    ><Plus className="h-5 w-5" /> New Sale
+                    </Link>
+                    <Link href={"/admin/sales/return"}
+                        className="flex items-center gap-x-2 text-sm font-medium px-3 py-2 rounded-md bg-gray-100 hover:bg-secondary transition-colors hover:text-white"
+                    ><Undo2 className="h-5 w-5" /> Return Sale
+                    </Link>
+                </div>
             </div>
             <table className="table-fixed w-full mt-4 border-collapse">
                 <thead className="bg-gray-100 text-sm">
