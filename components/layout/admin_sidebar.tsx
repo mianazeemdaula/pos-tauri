@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Package, LogOutIcon, Split, Handshake, Users, ScanBarcode, Settings, ShoppingCart, Receipt, HandCoins, Landmark, User2, UserCheck, CodeSquare } from "lucide-react";
+import { LayoutDashboard, Package, LogOutIcon, Split, Handshake, Users, ScanBarcode, Settings, ShoppingCart, Receipt, HandCoins, Landmark, User2, UserCheck, CodeSquare, ReceiptIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/lib/actions/actions";
@@ -17,6 +17,7 @@ export function AdminSidebar() {
         { href: '/admin/purchase', label: "Purchases", icon: ScanBarcode },
         { href: '/admin/payments', label: "Payments", icon: HandCoins },
         { href: '/admin/receivings', label: "Receivings", icon: Landmark },
+        { href: '/admin/expenses', label: "Expense", icon: ReceiptIcon },
         {
             href: '#', label: "Agents", icon: UserCheck, submenu: [
                 { href: '/admin/agents', label: "Agents", icon: User2 },

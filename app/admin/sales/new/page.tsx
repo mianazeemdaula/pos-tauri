@@ -122,18 +122,18 @@ export default function SalePage() {
                 throw new Error(res.statusText);
             }
             const data = await res.json();
-            // const salePrintRes = await fetch("http://127.0.0.1:5000/print", {
-            //     method: "POST",
-            //     mode: 'no-cors',
-            //     body: data.data,
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            // });
-            // if (!salePrintRes.ok) {
-            //     console.log(await salePrintRes.json());
-            //     throw new Error(salePrintRes.statusText);
-            // }
+            const salePrintRes = await fetch("http://127.0.0.1:5000/print", {
+                method: "POST",
+                body: JSON.stringify(data),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const d = await salePrintRes.json();
+            if (!res.ok) {
+                // throw new Error(d.error);
+                toast.error('Error: ' + d.error);
+            }
             toast.success('Sale completed');
             window.location.reload();
         } catch (error) {

@@ -49,6 +49,7 @@ export default async function Dashboard() {
         },
     });
     const pidata = balances.map((balance) => ({
+        id: balance.id,
         name: balance.name,
         value: balance.Transaction[0]?.balance ?? 0,
     }));
@@ -58,12 +59,14 @@ export default async function Dashboard() {
         <div>
             <h1>Dashboard</h1>
             <p>Welcome {session?.user?.name}</p>
-            <div className=''>
-                <DailySaleChart data={salesData} />
-            </div>
-            <div>
-                <h2>Balance</h2>
-                <PaymentTypeChart data={pidata} />
+            <div className='flex gap-4'>
+                <div className=''>
+                    <DailySaleChart data={salesData} />
+                </div>
+                <div>
+                    <h2>Balance</h2>
+                    <PaymentTypeChart data={pidata} />
+                </div>
             </div>
         </div>
     );

@@ -26,6 +26,7 @@ model User {
   sales      Sale[]
   purchases  Purchase[]
   SaleReturn SaleReturn[]
+  Expense    Expense[]
 }
 
 model Account {
@@ -148,6 +149,7 @@ model PaymentType {
   Payment     Payment[]
   Transaction Transaction[]
   SaleReturn  SaleReturn[]
+  Expense     Expense[]
 }
 
 model Sale {
@@ -162,6 +164,7 @@ model Sale {
   discount      Float
   discount2     Float        @default(0)
   tax           Float        @default(0)
+  cash          Float        @default(0)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   items         SaleDetail[]
@@ -322,4 +325,17 @@ model SaleReturnDetail {
   discount  Float      @default(0)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+}
+
+model Expense {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  paymentType   PaymentType @relation(fields: [paymentTypeId], references: [id])
+  paymentTypeId Int
+  userId        Int
+  note          String?
+  amount        Float       @default(0)
+  expenseDate   DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }

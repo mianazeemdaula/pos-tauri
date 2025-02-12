@@ -43,7 +43,11 @@ export async function POST(req: NextRequest) {
         const userId = session?.user?.id || '';
         const partyId = Number(data.partyId);
         const total = Number(data.total);
-        const payable = total - Number(data.discount);
+        const payable = (total - Number(data.discount));
+        let cashAmount = Number(data.cash);
+        if (cashAmount > payable) {
+            cashAmount = payable;
+        }
         await db.$transaction(async (prisma) => {
             const purchase = await prisma.purchase.create({
                 data: {
@@ -97,13 +101,13 @@ export async function POST(req: NextRequest) {
                     createdAt: 'desc',
                 },
             });
-
+            const ledgerPayable = payable - cashAmount;
             await prisma.ledger.create({
                 data: {
                     partyId,
                     reference: `Purchase of #[${purchase.id}]`,
-                    credit: payable,
-                    balance: wallet ? wallet.balance + payable : payable,
+                    credit: ledgerPayable,
+                    balance: wallet ? wallet.balance + ledgerPayable : ledgerPayable,
                 },
             });
 
@@ -113,12 +117,13 @@ export async function POST(req: NextRequest) {
                     createdAt: 'desc',
                 },
             });
+
             await prisma.transaction.create({
                 data: {
                     paymentTypeId: data.paymentTypeId,
-                    balance: tbalance ? tbalance.balance - payable : -payable,
+                    balance: tbalance ? tbalance.balance - cashAmount : -cashAmount,
                     note: `Purchase of #[${purchase.id}]`,
-                    credit: payable,
+                    credit: cashAmount,
                     openBalance: tbalance ? tbalance.balance : 0,
                 },
             });

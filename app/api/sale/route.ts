@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
         const userId = Number(session?.user?.id);
         const partyId = data.partyId;
         const totalNetAmount = (Number(data.total) + Number(data.tax) - Number(data.discount)) - Number(data.discount2);
-        const cash = Number(data.cash);
+        let cash = Number(data.cash);
+        if (cash > totalNetAmount) {
+            cash = totalNetAmount;
+        }
         await db.$transaction(async (prisma) => {
             const sale = await prisma.sale.create({
                 data: {
@@ -54,6 +57,7 @@ export async function POST(req: NextRequest) {
                     discount: data.discount,
                     discount2: data.discount2,
                     tax: data.tax,
+                    cash: data.cash,
                 },
             });
 
@@ -131,7 +135,7 @@ export async function POST(req: NextRequest) {
             },
         });
         console.log(salePrint);
-        return NextResponse.json({ message: 'success', data: salePrint });
+        return NextResponse.json(salePrint);
     } catch (error) {
         console.log(error);
         return NextResponse.json({ message: error }, { status: 500 });
