@@ -54,10 +54,11 @@ export default function Products() {
                 </button>
             </div>
             <table className="table-fixed w-full mt-4 border-collapse">
-                <thead className="bg-gray-100 text-sm">
+                <thead className="bg-gray-100 text-xs">
                     <tr>
                         <td className="w-1/4 text-left p-2">SKU</td>
                         <td className="w-1/4 text-left p-2">Name</td>
+                        <td className="w-1/4 text-left">Size</td>
                         <td className="w-1/4 text-left">Price</td>
                         <td className="w-1/4 text-left">Discount</td>
                         <td className="w-1/4 text-left">Sale Price</td>
@@ -67,15 +68,16 @@ export default function Products() {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                    {productList.map((product) => (
+                    {productList.map((product: any) => (
                         <tr key={product.id}>
                             <td className="p-2">{product.code}</td>
                             <td className="p-2">{product.name}</td>
+                            <td className="p-2">{product.size.name}</td>
                             <td>{product.price}</td>
                             <td>{product.discount}%</td>
                             <td>{product.price - (product.price * product.discount / 100)}</td>
                             <td>{product.stock}</td>
-                            <td>{formatDate(product.createdAt)}</td>
+                            <td className="text-nowrap">{formatDate(product.createdAt)}</td>
                             <td className="text-center">
                                 <button onClick={() => handleOpenModal(product)} >
                                     <FilePenLine className="h-5 w-5" />

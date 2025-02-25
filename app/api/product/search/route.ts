@@ -8,8 +8,13 @@ export async function GET(req: NextRequest) {
         where: {
             OR: [
                 { name: { contains: s } },
+                { nameUr: { contains: s } },
                 { code: { contains: s } },
             ]
+        },
+        include: {
+            size: true,
+            brand: true,
         }
     });
     return NextResponse.json(products);

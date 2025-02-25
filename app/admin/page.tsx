@@ -63,8 +63,7 @@ export default async function Dashboard() {
                 <div className=''>
                     <DailySaleChart data={salesData} />
                 </div>
-                <div>
-                    <h2>Balance</h2>
+                <div className='w-full'>
                     <PaymentTypeChart data={pidata} />
                 </div>
             </div>

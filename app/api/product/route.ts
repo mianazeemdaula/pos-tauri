@@ -16,6 +16,9 @@ export async function GET(req: NextRequest) {
             orderBy: {
                 createdAt: 'desc',
             },
+            include: {
+                size: true,
+            },
             where: {
                 OR: [
                     {
@@ -34,7 +37,7 @@ export async function GET(req: NextRequest) {
                         },
                     },
                 ],
-            },
+            }
         });
         const total = await db.product.count({});
         const totalPages = Math.ceil(total / take);

@@ -42,6 +42,7 @@ export default function SearchProductModal({ isOpen, onClose }: SearchModalProps
                         <tr>
                             <td className="w-1/4 text-left p-2">SKU</td>
                             <td className="w-1/4 text-left">Name</td>
+                            <td className="w-1/4 text-left">Brand</td>
                             <td className="w-1/4 text-left" >Stock</td>
                             <td className="w-1/4 text-left">Price</td>
                             <td className="w-1/4 text-left">Discount</td>
@@ -49,10 +50,11 @@ export default function SearchProductModal({ isOpen, onClose }: SearchModalProps
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 text-sm bg-white">
-                        {productsList.map((p) => (
+                        {productsList.map((p: any) => (
                             <tr key={p.id}>
                                 <td className="p-2">{p.code}</td>
-                                <td>{p.name}</td>
+                                <td>{p.name} ({p.size.name})</td>
+                                <td>{p.brand.name}</td>
                                 <td>{p.stock}</td>
                                 <td>{p.price}</td>
                                 <td>{p.discount}%</td>

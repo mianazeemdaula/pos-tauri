@@ -8,7 +8,6 @@ import Label from "@/components/ui/label";
 import SearchProductModal from "@/components/dialogs/serach_products";
 import hotkeys from "hotkeys-js";
 import Select from "@/components/ui/select";
-import CartItemEditModal from "@/components/dialogs/cartitem_edit";
 import { PurchaseItem } from "@/lib/datatypes";
 import PurchaseItemEditModal from "@/components/dialogs/purchaseitem_edit";
 import { Input } from "@/components/ui/input";
@@ -27,6 +26,9 @@ export default function SalePage() {
     const [paymentTypesList, setPaymentTypes] = useState<PaymentType[]>([])
     const [paymentType, setPaymentType] = useState<number>(1);
     const [cashamount, setCashAmount] = useState<number>(0);
+    const [invoiceNo, setInvoiceNo] = useState<String>('');
+    const [invoiceDate, setInvoiceDate] = useState<Date | null>(new Date());
+    const [purchaseDate, setPurchaseDate] = useState<Date | null>(new Date());
 
     const totalAmount = itemList.reduce((sum, item) => sum + item.total, 0);
     const totalQty = itemList.reduce((sum, item) => sum + item.qty, 0);
@@ -164,11 +166,11 @@ export default function SalePage() {
                     discount: totalDiscount,
                     qty: totalQty,
                     partyId: selectedSellerId,
-                    purchaseDate: new Date(),
-                    invoiceDate: new Date(),
+                    purchaseDate: purchaseDate,
+                    invoiceDate: invoiceDate,
                     paymentTypeId: paymentType,
                     cash: cashamount,
-                    invoiceNo: Math.floor(Math.random() * 1000000),
+                    invoiceNo: invoiceNo,
                 }),
                 headers: {
                     'Content-Type': 'application/json',
@@ -199,25 +201,39 @@ export default function SalePage() {
 
 
             <div className="flex items-center justify-between space-x-4 my-2">
-                <div>
-                    <Label htmlFor="customer_id">Company</Label>
-                    <Select name="customer_id" onChange={(e) => {
-                        setSelectedSellerId(e.target.value);
-                        const customer: any = customersList.find((c) => c.id === Number(e.target.value));
-                        if (customer) {
-                            setSellerBalance(customer?.wallet?.balance || 0);
-                        }
-                    }} options={[]}>
-                        {customersList.map((c) => (
-                            <option key={c.id} value={c.id}> {c.name} </option>
-                        ))}
-                    </Select>
+                <div className="flex items-center space-x-4 w-3/4">
+                    <div>
+                        <Label htmlFor="customer_id">Party</Label>
+                        <Select name="customer_id" onChange={(e) => {
+                            setSelectedSellerId(e.target.value);
+                            const customer: any = customersList.find((c) => c.id === Number(e.target.value));
+                            if (customer) {
+                                setSellerBalance(customer?.wallet?.balance || 0);
+                            }
+                        }} options={[]}>
+                            {customersList.map((c) => (
+                                <option key={c.id} value={c.id}> {c.name} </option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="customer_id">Invoice #</Label>
+                        <Input name="invoiceNo" type="text" onChange={(v) => setInvoiceNo(v.target.value)} placeholder="A0001" />
+                    </div>
+                    <div>
+                        <Label htmlFor="invoiceDate">Invoice Date</Label>
+                        <Input name="invoiceDate" type="date" onChange={(v) => setInvoiceDate(v.target.valueAsDate)} />
+                    </div>
+                    <div>
+                        <Label htmlFor="purchaseDate">Purchase Date</Label>
+                        <Input name="purchaseDate" type="date" onChange={(v) => setPurchaseDate(v.target.valueAsDate)} />
+                    </div>
                 </div>
                 <div className="w-48 text-right">
                     <Label htmlFor="customer_balance">Balance</Label>
                     <div><span className="font-bold">RS.</span> {sellerBalance}</div>
                 </div>
-            </div>
+            </div >
 
             <div className="flex items-center justify-between space-x-4">
                 <input type="text" name="" id="" className="w-full px-3 py-2 rounded-md" onKeyDown={skuScanSubmit} placeholder="Enter SKU or F2" />

@@ -1,11 +1,11 @@
-import { Brand, Category, Product } from "@prisma/client";
+import { Brand, Category, Product, Size } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { useEffect, useState } from "react";
-import { brands, categories } from "@/lib/database";
+import { brands, categories, sizes } from "@/lib/database";
 import Select from "../ui/select";
 
 interface ProductModalProps {
@@ -17,6 +17,7 @@ interface ProductModalProps {
 const formSchema = z.object({
     categoryId: z.number().min(1),
     brandId: z.number().min(1),
+    sizeId: z.number().min(1),
     code: z.string().min(3).max(64),
     name: z.string().min(3).max(50),
     nameUr: z.string().min(3).max(60),
@@ -41,13 +42,16 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
 
     const [categoriesList, setCategoriesList] = useState<Category[]>([]);
     const [brandsList, setBrandsList] = useState<Brand[]>([]);
+    const [sizesList, setSizesList] = useState<Size[]>([]);
 
 
     async function getInitData() {
         const res = await categories();
         const res2 = await brands();
+        const res3 = await sizes();
         setCategoriesList(res);
         setBrandsList(res2);
+        setSizesList(res3);
     }
 
     useEffect(() => {
@@ -57,6 +61,7 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
             setValue('code', initialData.code);
             setValue('tax', initialData.tax);
             setValue('categoryId', initialData.categoryId);
+            setValue('sizeId', initialData.sizeId);
             setValue('brandId', initialData.brandId);
             setValue('nameUr', initialData.nameUr);
             setValue('price', initialData.price);
@@ -122,6 +127,15 @@ export default function ProductModal({ isOpen, onClose, initialData }: ProductMo
                                 ))}
                             </Select>
                             {errors.brandId && <p className="text-sm text-red-500 mt-1">{errors.brandId.message?.toString()}</p>}
+                        </div>
+                        <div className="">
+                            <label className="block mb-2 font-medium">Size</label>
+                            <Select options={[]} {...register('sizeId', { valueAsNumber: true })}>
+                                {sizesList.map((size) => (
+                                    <option key={size.id} value={size.id} >{size.name}</option>
+                                ))}
+                            </Select>
+                            {errors.sizeId && <p className="text-sm text-red-500 mt-1">{errors.sizeId.message?.toString()}</p>}
                         </div>
                         <div className="">
                             <label className="block mb-2 font-medium">Name</label>

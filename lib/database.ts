@@ -29,6 +29,12 @@ export async function brands() {
     return rows;
 }
 
+
+export async function sizes() {
+    const rows = await db.size.findMany({});
+    return rows;
+}
+
 export async function customers() {
     const rows = await db.party.findMany({
     });
@@ -50,6 +56,15 @@ export async function parties() {
 }
 
 export async function paymentTypes() {
-    const rows = await db.paymentType.findMany({});
+    const rows = await db.paymentType.findMany({
+        include: {
+            Transaction: {
+                orderBy: {
+                    createdAt: 'desc',
+                },
+                take: 1,
+            },
+        }
+    });
     return rows;
 }

@@ -27,6 +27,7 @@ model User {
   purchases  Purchase[]
   SaleReturn SaleReturn[]
   Expense    Expense[]
+  Qutation   Qutation[]
 }
 
 model Account {
@@ -101,6 +102,14 @@ model Brand {
   products  Product[]
 }
 
+model Size {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Product   Product[]
+}
+
 model Product {
   id               Int                @id @default(autoincrement())
   name             String
@@ -114,6 +123,8 @@ model Product {
   category         Category           @relation(fields: [categoryId], references: [id])
   categoryId       Int
   lowStockAlert    Int                @default(0)
+  size             Size?              @relation(fields: [sizeId], references: [id])
+  sizeId           Int?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   saleItems        SaleDetail[]
@@ -122,6 +133,7 @@ model Product {
   brandId          Int?
   PriceHistory     PriceHistory[]
   SaleReturnDetail SaleReturnDetail[]
+  QutationDetail   QutationDetail[]
 }
 
 model Party {
@@ -143,6 +155,7 @@ model Party {
 model PaymentType {
   id          Int           @id @default(autoincrement())
   name        String
+  accountNo   String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   sales       Sale[]
@@ -338,4 +351,32 @@ model Expense {
   expenseDate   DateTime
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model Qutation {
+  id        Int              @id @default(autoincrement())
+  user      User             @relation(fields: [userId], references: [id])
+  userId    Int
+  total     Float
+  discount  Float
+  discount2 Float            @default(0)
+  tax       Float            @default(0)
+  cash      Float            @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  items     QutationDetail[]
+}
+
+model QutationDetail {
+  id        Int      @id @default(autoincrement())
+  quation   Qutation @relation(fields: [quationId], references: [id])
+  quationId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int      @default(1)
+  price     Float
+  tax       Float    @default(0)
+  discount  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

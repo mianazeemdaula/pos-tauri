@@ -129,9 +129,8 @@ export default function SalePage() {
                     "Content-Type": "application/json",
                 },
             });
-            const d = await salePrintRes.json();
-            if (!res.ok) {
-                // throw new Error(d.error);
+            if (!salePrintRes.ok) {
+                const d = await salePrintRes.json();
                 toast.error('Error: ' + d.error);
             }
             toast.success('Sale completed');
